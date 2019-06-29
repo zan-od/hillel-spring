@@ -16,19 +16,20 @@ public class AppleProcessor {
         return Optional.ofNullable(result);
     }
 
-    public static List<Apple> filter(List<Apple> apples, ApplePredicate predicate) {
-        List<Apple> filtered = new ArrayList<>();
-        for (Apple apple: apples) {
-            if (predicate.matchCondition(apple)){
-                filtered.add(apple);
+    public static <T> List<T> filter(List<T> objects, MyPredicate predicate) {
+        List<T> filtered = new ArrayList<>();
+        for (T obj: objects) {
+            if (predicate.matchCondition(obj)){
+                filtered.add(obj);
             }
         }
 
         return filtered;
     }
 
-    interface ApplePredicate{
-        boolean matchCondition(Apple apple);
+    @FunctionalInterface
+    interface MyPredicate <T> {
+        boolean matchCondition(T object);
     }
 
 }
