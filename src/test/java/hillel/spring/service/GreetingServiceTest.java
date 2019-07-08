@@ -18,12 +18,8 @@ import java.util.stream.IntStream;
 @SpringBootTest(classes = {GreetingService.class, GreetingRepository.class})
 public class GreetingServiceTest {
 
-    private GreetingService greetingService;
-
     @Autowired
-    public void setGreetingService(GreetingService greetingService) {
-        this.greetingService = greetingService;
-    }
+    private GreetingService greetingService;
 
     @Test
     public void getGreeting() {
