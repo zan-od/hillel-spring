@@ -1,4 +1,4 @@
-package hillel.spring.repository;
+package hillel.spring.greeting.repository;
 
 import org.springframework.stereotype.Repository;
 

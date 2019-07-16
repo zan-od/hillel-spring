@@ -1,6 +1,6 @@
-package hillel.spring.service;
+package hillel.spring.greeting.service;
 
-import hillel.spring.repository.GreetingRepository;
+import hillel.spring.greeting.repository.GreetingRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
