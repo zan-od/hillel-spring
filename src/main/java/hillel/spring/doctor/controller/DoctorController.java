@@ -1,12 +1,12 @@
 package hillel.spring.doctor.controller;
 
+import hillel.spring.doctor.BadRequestException;
 import hillel.spring.doctor.IdMismatchException;
 import hillel.spring.doctor.NoSuchDoctorException;
 import hillel.spring.doctor.domain.Doctor;
 import hillel.spring.doctor.service.DoctorService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -53,8 +53,8 @@ public class DoctorController {
     public ResponseEntity<?> update(@RequestBody Doctor doctor,
                                     @PathVariable("id") Integer id) {
 
-        Assert.notNull(id, "Path variable {id} not specified");
-        Assert.notNull(doctor.getId(), "Doctor's id not specified");
+        assertNotNull(id, "Path variable {id} not specified");
+        assertNotNull(doctor.getId(), "Doctor's id not specified");
 
         if (!doctor.getId().equals(id)) {
             throw new IdMismatchException();
@@ -70,5 +70,11 @@ public class DoctorController {
         doctorService.delete(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    private void assertNotNull(Object value, String message) {
+        if (value == null) {
+            throw new BadRequestException(message);
+        }
     }
 }

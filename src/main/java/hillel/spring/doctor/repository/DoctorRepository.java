@@ -18,7 +18,7 @@ public class DoctorRepository {
     private final AtomicInteger lastId = new AtomicInteger(0);
 
     public List<Doctor> list() {
-        return Collections.unmodifiableList(doctors);
+        return doctors;
     }
 
     public Optional<Doctor> findById(Integer id) {

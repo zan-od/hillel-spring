@@ -167,4 +167,12 @@ public class DoctorControllerTest {
 
         verify(doctorService, times(1)).delete(2);
     }
+
+    @Test
+    public void updateDoctorCheckIdField() throws Exception {
+        this.mockMvc.perform(put("/doctors/{id}", "1")
+                .content("{\"name\": \"Dolittle\", \"specialization\": \"surgeon\"}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
 }
