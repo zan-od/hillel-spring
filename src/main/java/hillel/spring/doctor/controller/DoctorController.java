@@ -6,12 +6,16 @@ import hillel.spring.doctor.NoSuchDoctorException;
 import hillel.spring.doctor.domain.Doctor;
 import hillel.spring.doctor.service.DoctorService;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 @RestController
 @AllArgsConstructor
@@ -25,16 +29,34 @@ public class DoctorController {
 
     @GetMapping("/doctors")
     public List<Doctor> findDoctors(
-            @RequestParam(name = "specialization", required = false) String specialization,
-            @RequestParam(name = "name", required = false) String name) {
+            @RequestParam Optional<String> specialization,
+            @RequestParam Optional<String> name) {
 
-        if (specialization != null) {
-            return doctorService.findBySpecialization(specialization);
-        } else if (name != null) {
-            return doctorService.findByNameStartsWith(name);
-        } else {
-            return doctorService.list();
-        }
+
+        Optional<Predicate<Doctor>> maybeNameCriteria = name.map(DoctorController::filterByNameStartsWith);
+        Optional<Predicate<Doctor>> maybeSpecializationCriteria = name.map(DoctorController::filterBySpecialization);
+
+        Predicate<Doctor> criteria =
+                Stream.of(maybeNameCriteria, maybeSpecializationCriteria)
+                .flatMap(Optional::stream)
+                .reduce(Predicate::and)
+                .orElse(doctor -> true);
+
+        return doctorService.findByCriteria(criteria);
+    }
+
+    public static Predicate<Doctor> filterByNameStartsWith(String name){
+        return doctor -> doctor.getName().startsWith(name);
+    }
+
+    public static Predicate<Doctor> filterBySpecialization(String specialization){
+        return doctor -> doctor.getSpecialization().equals(specialization);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND) //FORBIDDEN)
+    public void noSuchDoctorHandler(NoSuchDoctorException ex){
+        // this method handles all NoSuchDoctorException instances and overrides response statuses
     }
 
     @PostMapping("/doctors")
@@ -66,10 +88,9 @@ public class DoctorController {
     }
 
     @DeleteMapping("/doctors/{id}")
-    public ResponseEntity<?> delete(@PathVariable Integer id) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Integer id) {
         doctorService.delete(id);
-
-        return ResponseEntity.noContent().build();
     }
 
     private void assertNotNull(Object value, String message) {

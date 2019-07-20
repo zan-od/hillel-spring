@@ -7,16 +7,24 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.util.ResourceUtils;
 import org.springframework.web.context.WebApplicationContext;
 
+import javax.print.Doc;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,20 +35,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@AutoConfigureMockMvc
 public class DoctorControllerTest {
-
-    @Autowired
-    private WebApplicationContext ctx;
 
     @MockBean
     private DoctorService doctorService;
 
-    private MockMvc mockMvc;
-
-    @Before
-    public void setUp() {
-        this.mockMvc = MockMvcBuilders.webAppContextSetup(this.ctx).build();
-    }
+    @Autowired
+    MockMvc mockMvc;
 
     @Test
     public void findById() throws Exception {
@@ -69,14 +71,14 @@ public class DoctorControllerTest {
 
     @Test
     public void findDoctorsByNameNotFound() throws Exception {
-        when(doctorService.findByNameStartsWith("A")).thenReturn(List.of());
+        when(doctorService.findByCriteria(any(Predicate.class))).thenReturn(List.of());
 
         this.mockMvc.perform(get("/doctors?name={name}", "A")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
 
-        verify(doctorService, times(1)).findByNameStartsWith("A");
+        verify(doctorService, times(1)).findByCriteria(any(Predicate.class));
     }
 
     @Test
@@ -174,5 +176,16 @@ public class DoctorControllerTest {
                 .content("{\"name\": \"Dolittle\", \"specialization\": \"surgeon\"}")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
+    }
+
+    public String fromResource(String path){
+        File file = null;
+        try {
+            file = ResourceUtils.getFile("classpath:" + path);
+            return Files.readString(file.toPath());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

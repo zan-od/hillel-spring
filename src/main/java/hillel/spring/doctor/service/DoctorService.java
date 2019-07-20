@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -19,6 +21,12 @@ public class DoctorService {
 
     public Optional<Doctor> findById(Integer id) {
         return doctorRepository.findById(id);
+    }
+
+    public List<Doctor> findByCriteria(Predicate<Doctor> predicate){
+        return doctorRepository.list().stream()
+                .filter(predicate)
+                .collect(Collectors.toList());
     }
 
     public List<Doctor> findBySpecialization(String specialization) {
