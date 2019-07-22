@@ -17,6 +17,11 @@ public class DoctorRepository {
     private final List<Doctor> doctors = Collections.synchronizedList(new ArrayList<>());
     private final AtomicInteger lastId = new AtomicInteger(0);
 
+    public void cleanRepository() {
+        doctors.clear();
+        lastId.set(0);
+    }
+
     public List<Doctor> list() {
         return doctors;
     }
@@ -48,9 +53,11 @@ public class DoctorRepository {
         return Optional.empty();
     }
 
-    public void create(Doctor doctor) {
+    public Doctor create(Doctor doctor) {
         doctor.setId(lastId.incrementAndGet());
         doctors.add(doctor);
+
+        return doctor;
     }
 
     public synchronized void update(Doctor doctor) {
