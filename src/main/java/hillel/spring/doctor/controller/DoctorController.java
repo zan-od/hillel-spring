@@ -5,6 +5,7 @@ import hillel.spring.doctor.NoSuchDoctorException;
 import hillel.spring.doctor.domain.Doctor;
 import hillel.spring.doctor.dto.DoctorDtoConverter;
 import hillel.spring.doctor.dto.DoctorInputDto;
+import hillel.spring.doctor.dto.DoctorOutputDto;
 import hillel.spring.doctor.service.DoctorService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @RestController
@@ -25,18 +27,18 @@ public class DoctorController {
     private final DoctorDtoConverter doctorDtoConverter;
 
     @GetMapping("/doctors/{id}")
-    public Doctor findById(@PathVariable("id") Integer id) {
-        return doctorService.findById(id).orElseThrow(NoSuchDoctorException::new);
+    public DoctorOutputDto findById(@PathVariable("id") Integer id) {
+        return doctorDtoConverter.toDto(doctorService.findById(id).orElseThrow(NoSuchDoctorException::new));
     }
 
     @GetMapping("/doctors")
-    public List<Doctor> findDoctors(
+    public List<DoctorOutputDto> findDoctors(
             @RequestParam Optional<String> specialization,
             @RequestParam Optional<String> name) {
 
 
-        Optional<Predicate<Doctor>> maybeNameCriteria = name.map(DoctorController::filterByNameStartsWith);
-        Optional<Predicate<Doctor>> maybeSpecializationCriteria = specialization.map(DoctorController::filterBySpecialization);
+        Optional<Predicate<Doctor>> maybeNameCriteria = name.map(this::filterByNameStartsWith);
+        Optional<Predicate<Doctor>> maybeSpecializationCriteria = specialization.map(this::filterBySpecialization);
 
         Predicate<Doctor> criteria =
                 Stream.of(maybeNameCriteria, maybeSpecializationCriteria)
@@ -44,14 +46,16 @@ public class DoctorController {
                 .reduce(Predicate::and)
                 .orElse(doctor -> true);
 
-        return doctorService.findByCriteria(criteria);
+        return doctorService.findByCriteria(criteria).stream()
+                .map(doctorDtoConverter::toDto)
+                .collect(Collectors.toList());
     }
 
-    public static Predicate<Doctor> filterByNameStartsWith(String name){
+    private Predicate<Doctor> filterByNameStartsWith(String name) {
         return doctor -> doctor.getName().startsWith(name);
     }
 
-    public static Predicate<Doctor> filterBySpecialization(String specialization){
+    private Predicate<Doctor> filterBySpecialization(String specialization) {
         return doctor -> doctor.getSpecialization().equals(specialization);
     }
 

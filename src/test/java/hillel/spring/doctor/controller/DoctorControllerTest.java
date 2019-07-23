@@ -35,7 +35,7 @@ public class DoctorControllerTest {
 
     @After
     public void clean() {
-        doctorRepository.cleanRepository();
+        doctorRepository.clearRepository();
     }
 
     private void addDoctor(Integer id, String name, String specialization) {
@@ -108,16 +108,6 @@ public class DoctorControllerTest {
     }
 
     @Test
-    public void createDoctorWithPredefinedId() throws Exception {
-        this.mockMvc.perform(post("/doctors")
-                .content("{\"id\": 1, \"name\": \"Hide\", \"specialization\": \"dentist\"}")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        assertEquals(doctorRepository.list().size(), 0);
-    }
-
-    @Test
     public void createDoctor() throws Exception {
         this.mockMvc.perform(post("/doctors")
                 .content("{\"name\": \"Hide\", \"specialization\": \"dentist\"}")
@@ -145,22 +135,6 @@ public class DoctorControllerTest {
         Doctor savedDoctor = doctorRepository.list().get(0);
         assertEquals(savedDoctor.getName(), "Dolittle");
         assertEquals(savedDoctor.getSpecialization(), "surgeon");
-    }
-
-    @Test
-    public void updateDoctorIdMismatch() throws Exception {
-        addDoctor(1, "Hide", "dentist");
-
-        this.mockMvc.perform(put("/doctors/{id}", "1")
-                .content("{\"id\": 2, \"name\": \"Dolittle\", \"specialization\": \"surgeon\"}")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        assertEquals(doctorRepository.list().size(), 1);
-
-        Doctor savedDoctor = doctorRepository.list().get(0);
-        assertEquals(savedDoctor.getName(), "Hide");
-        assertEquals(savedDoctor.getSpecialization(), "dentist");
     }
 
     @Test
@@ -197,15 +171,5 @@ public class DoctorControllerTest {
                 .andExpect(status().isNotFound());
 
         assertEquals(doctorRepository.list().size(), 1);
-    }
-
-    @Test
-    public void updateDoctorCheckIdField() throws Exception {
-        this.mockMvc.perform(put("/doctors/{id}", "1")
-                .content("{\"name\": \"Dolittle\", \"specialization\": \"surgeon\"}")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        assertEquals(doctorRepository.list().size(), 0);
     }
 }
