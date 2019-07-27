@@ -28,3 +28,10 @@ dependencies {
 	implementation "org.mapstruct:mapstruct:1.3.0.Final"
 	annotationProcessor "org.mapstruct:mapstruct-processor:1.3.0.Final"
 }
+
+compileJava {
+	options.compilerArgs = [
+			'-Amapstruct.defaultComponentModel=spring',
+			'-Amapstruct.unmappedTargetPolicy=ERROR'
+	]
+}

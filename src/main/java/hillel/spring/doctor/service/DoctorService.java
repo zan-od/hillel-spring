@@ -29,16 +29,8 @@ public class DoctorService {
                 .collect(Collectors.toList());
     }
 
-    public List<Doctor> findBySpecialization(String specialization) {
-        return doctorRepository.findBySpecialization(specialization);
-    }
-
-    public List<Doctor> findByNameStartsWith(String name) {
-        return doctorRepository.findByNameStartsWith(name);
-    }
-
-    public void create(Doctor doctor) {
-        doctorRepository.create(doctor);
+    public Doctor create(Doctor doctor) {
+        return doctorRepository.create(doctor);
     }
 
     public void update(Doctor doctor) {

@@ -4,68 +4,58 @@ import hillel.spring.doctor.NoSuchDoctorException;
 import hillel.spring.doctor.domain.Doctor;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Repository
 public class DoctorRepository {
 
-    private final List<Doctor> doctors = Collections.synchronizedList(new ArrayList<>());
+    private final Map<Integer, Doctor> doctors = new ConcurrentHashMap<>();
     private final AtomicInteger lastId = new AtomicInteger(0);
 
+    // for testing purposes
+    public void clearRepository() {
+        doctors.clear();
+        lastId.set(0);
+    }
+
     public List<Doctor> list() {
-        return doctors;
+        return doctors.values().stream()
+                //for testing purposes we need to have the list sorted by id
+                .sorted(Comparator.comparing(Doctor::getId))
+                .collect(Collectors.toList());
     }
 
     public Optional<Doctor> findById(Integer id) {
-        return doctors.stream()
-                .filter(doctor -> doctor.getId().equals(id))
-                .findFirst();
+        return Optional.ofNullable(doctors.get(id));
     }
 
-    public List<Doctor> findBySpecialization(String specialization) {
-        return doctors.stream()
-                .filter(doctor -> doctor.getSpecialization().equals(specialization))
-                .collect(Collectors.toList());
+    public Doctor create(Doctor doctor) {
+        Integer id = lastId.incrementAndGet();
+        doctor.setId(id);
+        doctors.put(id, doctor);
+
+        return doctor;
     }
 
-    public List<Doctor> findByNameStartsWith(String name) {
-        return doctors.stream()
-                .filter(doctor -> doctor.getName().startsWith(name))
-                .collect(Collectors.toList());
-    }
-
-    private Optional<Integer> findIndexById(Integer id) {
-        for (int i = 0; i < doctors.size(); i++) {
-            if (doctors.get(i).getId().equals(id)) {
-                return Optional.of(i);
-            }
+    public void update(Doctor doctor) {
+        if (!doctors.containsKey(doctor.getId())) {
+            throw new NoSuchDoctorException();
         }
-        return Optional.empty();
+
+        doctors.put(doctor.getId(), doctor);
     }
 
-    public void create(Doctor doctor) {
-        doctor.setId(lastId.incrementAndGet());
-        doctors.add(doctor);
-    }
+    public void delete(Integer id) {
+        if (!doctors.containsKey(id)) {
+            throw new NoSuchDoctorException();
+        }
 
-    public synchronized void update(Doctor doctor) {
-        findIndexById(doctor.getId()).ifPresentOrElse(
-                idx -> doctors.set(idx, doctor)
-                , () -> {
-                    throw new NoSuchDoctorException();
-                });
-    }
-
-    public synchronized void delete(Integer id) {
-        findIndexById(id).ifPresentOrElse(
-                idx -> doctors.remove(idx.intValue())
-                , () -> {
-                    throw new NoSuchDoctorException();
-                });
+        doctors.remove(id);
     }
 }
