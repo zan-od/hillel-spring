@@ -1,0 +1,12 @@
+doctors:
+  host-name: localhost
+  working-hours:
+    startTime: 9
+    endTime: 16
+server:
+  port: 8080
+
+spring:
+  h2:
+    console:
+      enabled: true

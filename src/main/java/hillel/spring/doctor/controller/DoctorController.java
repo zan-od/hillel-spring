@@ -7,7 +7,9 @@ import hillel.spring.doctor.dto.DoctorDtoConverter;
 import hillel.spring.doctor.dto.DoctorInputDto;
 import hillel.spring.doctor.dto.DoctorOutputDto;
 import hillel.spring.doctor.service.DoctorService;
+import hillel.spring.doctor.service.DoctorWorkingHoursConfig;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,7 @@ import java.util.stream.Stream;
 public class DoctorController {
     private final DoctorService doctorService;
     private final DoctorDtoConverter doctorDtoConverter;
+    private final DoctorWorkingHoursConfig doctorWorkingHoursConfig;
 
     @GetMapping("/doctors/{id}")
     public DoctorOutputDto findById(@PathVariable("id") Integer id) {
@@ -88,5 +91,10 @@ public class DoctorController {
         if (value == null) {
             throw new BadRequestException(message);
         }
+    }
+
+    @GetMapping("/doctors/working-hours")
+    public String showWorkingHours() {
+        return "Working hours: " + doctorWorkingHoursConfig.getStartTime() + "-" + doctorWorkingHoursConfig.getEndTime();
     }
 }

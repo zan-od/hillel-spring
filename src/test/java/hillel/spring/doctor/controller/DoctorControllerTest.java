@@ -1,6 +1,7 @@
 package hillel.spring.doctor.controller;
 
 import hillel.spring.doctor.domain.Doctor;
+import hillel.spring.doctor.repository.DoctorInMemoryRepository;
 import hillel.spring.doctor.repository.DoctorRepository;
 import hillel.spring.doctor.service.DoctorService;
 import org.junit.After;
@@ -35,11 +36,11 @@ public class DoctorControllerTest {
 
     @After
     public void clean() {
-        doctorRepository.clearRepository();
+        doctorRepository.deleteAll();
     }
 
     private void addDoctor(Integer id, String name, String specialization) {
-        doctorRepository.create(new Doctor(id, name, specialization));
+        doctorRepository.save(new Doctor(id, name, specialization));
     }
 
     @Test
@@ -114,9 +115,9 @@ public class DoctorControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        assertEquals(doctorRepository.list().size(), 1);
+        assertEquals(doctorRepository.findAll().size(), 1);
 
-        Doctor savedDoctor = doctorRepository.list().get(0);
+        Doctor savedDoctor = doctorRepository.findAll().get(0);
         assertEquals(savedDoctor.getName(), "Hide");
         assertEquals(savedDoctor.getSpecialization(), "dentist");
     }
@@ -130,9 +131,9 @@ public class DoctorControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
-        assertEquals(doctorRepository.list().size(), 1);
+        assertEquals(doctorRepository.findAll().size(), 1);
 
-        Doctor savedDoctor = doctorRepository.list().get(0);
+        Doctor savedDoctor = doctorRepository.findAll().get(0);
         assertEquals(savedDoctor.getName(), "Dolittle");
         assertEquals(savedDoctor.getSpecialization(), "surgeon");
     }
@@ -146,9 +147,9 @@ public class DoctorControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
-        assertEquals(doctorRepository.list().size(), 1);
+        assertEquals(doctorRepository.findAll().size(), 1);
 
-        Doctor savedDoctor = doctorRepository.list().get(0);
+        Doctor savedDoctor = doctorRepository.findAll().get(0);
         assertEquals(savedDoctor.getName(), "Hide");
         assertEquals(savedDoctor.getSpecialization(), "dentist");
     }
@@ -160,7 +161,7 @@ public class DoctorControllerTest {
         this.mockMvc.perform(delete("/doctors/{id}", "1"))
                 .andExpect(status().isNoContent());
 
-        assertEquals(doctorRepository.list().size(), 0);
+        assertEquals(doctorRepository.findAll().size(), 0);
     }
 
     @Test
@@ -170,6 +171,6 @@ public class DoctorControllerTest {
         this.mockMvc.perform(delete("/doctors/{id}", "2"))
                 .andExpect(status().isNotFound());
 
-        assertEquals(doctorRepository.list().size(), 1);
+        assertEquals(doctorRepository.findAll().size(), 1);
     }
 }
