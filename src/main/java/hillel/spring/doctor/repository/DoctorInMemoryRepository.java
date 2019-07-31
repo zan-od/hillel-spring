@@ -1,7 +1,7 @@
 package hillel.spring.doctor.repository;
 
-import hillel.spring.doctor.NoSuchDoctorException;
 import hillel.spring.doctor.domain.Doctor;
+import hillel.spring.doctor.exception.NoSuchDoctorException;
 import org.springframework.stereotype.Repository;
 
 import java.util.Comparator;

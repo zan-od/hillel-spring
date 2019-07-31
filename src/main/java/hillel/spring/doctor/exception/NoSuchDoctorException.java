@@ -1,4 +1,4 @@
-package hillel.spring.doctor;
+package hillel.spring.doctor.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
