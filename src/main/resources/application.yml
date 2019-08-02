@@ -3,6 +3,13 @@ doctors:
   working-hours:
     startTime: 9
     endTime: 16
+  specializations:
+    - surgeon
+    - therapist
+    - oculist
+    - psychologist
+    - dentist
+
 server:
   port: 8080
 

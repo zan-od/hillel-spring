@@ -1,26 +1,27 @@
 package hillel.spring.doctor.controller;
 
-import hillel.spring.doctor.BadRequestException;
-import hillel.spring.doctor.NoSuchDoctorException;
+import hillel.spring.doctor.config.DoctorSpecializationsConfig;
+import hillel.spring.doctor.config.DoctorWorkingHoursConfig;
 import hillel.spring.doctor.domain.Doctor;
 import hillel.spring.doctor.dto.DoctorDtoConverter;
 import hillel.spring.doctor.dto.DoctorInputDto;
 import hillel.spring.doctor.dto.DoctorOutputDto;
+import hillel.spring.doctor.exception.BadRequestException;
+import hillel.spring.doctor.exception.NoSuchDoctorException;
+import hillel.spring.doctor.exception.UnknownSpecializationException;
 import hillel.spring.doctor.service.DoctorService;
-import hillel.spring.doctor.service.DoctorWorkingHoursConfig;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RestController
 @AllArgsConstructor
@@ -28,6 +29,7 @@ public class DoctorController {
     private final DoctorService doctorService;
     private final DoctorDtoConverter doctorDtoConverter;
     private final DoctorWorkingHoursConfig doctorWorkingHoursConfig;
+    private final DoctorSpecializationsConfig doctorSpecializationsConfig;
 
     @GetMapping("/doctors/{id}")
     public DoctorOutputDto findById(@PathVariable("id") Integer id) {
@@ -37,29 +39,27 @@ public class DoctorController {
     @GetMapping("/doctors")
     public List<DoctorOutputDto> findDoctors(
             @RequestParam Optional<String> specialization,
-            @RequestParam Optional<String> name) {
+            @RequestParam Optional<String> name,
+            @RequestParam Optional<List<String>> specializations) {
 
+        Map<String, Object> parameters = new HashMap<>();
+        if (specialization.isPresent()) {
+            parameters.put("specialization", specialization.get());
+        }
+        if (name.isPresent()) {
+            parameters.put("name", name.get());
+        }
+        if (specializations.isPresent()) {
+            parameters.put("specializations", specializations.get());
+        }
 
-        Optional<Predicate<Doctor>> maybeNameCriteria = name.map(this::filterByNameStartsWith);
-        Optional<Predicate<Doctor>> maybeSpecializationCriteria = specialization.map(this::filterBySpecialization);
+        return toDtoList(doctorService.findByCriteria(parameters));
+    }
 
-        Predicate<Doctor> criteria =
-                Stream.of(maybeNameCriteria, maybeSpecializationCriteria)
-                .flatMap(Optional::stream)
-                .reduce(Predicate::and)
-                .orElse(doctor -> true);
-
-        return doctorService.findByCriteria(criteria).stream()
-                .map(doctorDtoConverter::toDto)
+    private List<DoctorOutputDto> toDtoList(List<Doctor> doctors) {
+        return doctors.stream()
+                .map(doctor -> doctorDtoConverter.toDto(doctor))
                 .collect(Collectors.toList());
-    }
-
-    private Predicate<Doctor> filterByNameStartsWith(String name) {
-        return doctor -> doctor.getName().startsWith(name);
-    }
-
-    private Predicate<Doctor> filterBySpecialization(String specialization) {
-        return doctor -> doctor.getSpecialization().equals(specialization);
     }
 
     @PostMapping("/doctors")
@@ -74,6 +74,10 @@ public class DoctorController {
                                     @PathVariable("id") Integer id) {
 
         assertNotNull(id, "Path variable {id} not specified");
+
+        if (!doctorService.findById(id).isPresent()) {
+            throw new NoSuchDoctorException();
+        }
 
         Doctor doctor = doctorDtoConverter.toModel(doctorDto, id);
         doctorService.update(doctor);
@@ -96,5 +100,15 @@ public class DoctorController {
     @GetMapping("/doctors/working-hours")
     public String showWorkingHours() {
         return "Working hours: " + doctorWorkingHoursConfig.getStartTime() + "-" + doctorWorkingHoursConfig.getEndTime();
+    }
+
+    @GetMapping("/doctors/specializations")
+    public List<String> showSpecializations() {
+        return doctorSpecializationsConfig.getSpecializations();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "Unknown specialization")
+    public void noSuchDoctorHandler(UnknownSpecializationException ex) {
     }
 }

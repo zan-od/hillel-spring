@@ -1,4 +1,4 @@
-package hillel.spring.doctor.service;
+package hillel.spring.doctor.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

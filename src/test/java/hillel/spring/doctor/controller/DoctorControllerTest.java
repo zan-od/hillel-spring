@@ -1,10 +1,8 @@
 package hillel.spring.doctor.controller;
 
 import hillel.spring.doctor.domain.Doctor;
-import hillel.spring.doctor.repository.DoctorInMemoryRepository;
 import hillel.spring.doctor.repository.DoctorRepository;
-import hillel.spring.doctor.service.DoctorService;
-import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -23,10 +22,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 public class DoctorControllerTest {
-
-    @Autowired
-    public DoctorService doctorService;
 
     @Autowired
     public DoctorRepository doctorRepository;
@@ -34,23 +31,24 @@ public class DoctorControllerTest {
     @Autowired
     public MockMvc mockMvc;
 
-    @After
+    @Before
     public void clean() {
-        doctorRepository.deleteAll();
+        //doctorRepository.deleteAll();
+        //System.out.println("cleaned: " + doctorRepository.findAll().size());
     }
 
-    private void addDoctor(Integer id, String name, String specialization) {
-        doctorRepository.save(new Doctor(id, name, specialization));
+    private Integer addDoctor(Integer id, String name, String specialization) {
+        return doctorRepository.save(new Doctor(id, name, specialization)).getId();
     }
 
     @Test
     public void findById() throws Exception {
-        addDoctor(1, "Hide", "dentist");
+        Integer id = addDoctor(1, "Hide", "dentist");
 
-        this.mockMvc.perform(get("/doctors/{id}", "1")
+        this.mockMvc.perform(get("/doctors/{id}", id)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.name").value("Hide"))
                 .andExpect(jsonPath("$.specialization").value("dentist"));
     }
@@ -66,17 +64,20 @@ public class DoctorControllerTest {
 
     @Test
     public void findDoctorsByName() throws Exception {
-        addDoctor(1, "Hide", "dentist");
-        addDoctor(2, "Abbott", "surgeon");
-        addDoctor(3, "archibald", "therapist");
+        Integer id1 = addDoctor(1, "Hide", "dentist");
+        Integer id2 = addDoctor(2, "Abbott", "surgeon");
+        Integer id3 = addDoctor(3, "archibald", "therapist");
 
         this.mockMvc.perform(get("/doctors?name={name}", "A")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(2))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].id").value(id2))
                 .andExpect(jsonPath("$[0].name").value("Abbott"))
-                .andExpect(jsonPath("$[0].specialization").value("surgeon"));
+                .andExpect(jsonPath("$[0].specialization").value("surgeon"))
+                .andExpect(jsonPath("$[1].id").value(id3))
+                .andExpect(jsonPath("$[1].name").value("archibald"))
+                .andExpect(jsonPath("$[1].specialization").value("therapist"));
     }
 
     @Test
@@ -91,21 +92,43 @@ public class DoctorControllerTest {
 
     @Test
     public void findDoctorsByNameAndSpecialization() throws Exception {
-        addDoctor(1, "Hide", "dentist");
-        addDoctor(2, "Abbott", "surgeon");
-        addDoctor(3, "archibald", "therapist");
-        addDoctor(4, "Abbey", "surgeon");
+        Integer id1 = addDoctor(1, "Hide", "dentist");
+        Integer id2 = addDoctor(2, "Abbott", "surgeon");
+        Integer id3 = addDoctor(3, "archibald", "therapist");
+        Integer id4 = addDoctor(4, "Abbey", "surgeon");
 
         this.mockMvc.perform(get("/doctors?specialization={spec}&name={name}", "surgeon", "Abb")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id").value(2))
+                .andExpect(jsonPath("$[0].id").value(id2))
                 .andExpect(jsonPath("$[0].name").value("Abbott"))
                 .andExpect(jsonPath("$[0].specialization").value("surgeon"))
-                .andExpect(jsonPath("$[1].id").value(4))
+                .andExpect(jsonPath("$[1].id").value(id4))
                 .andExpect(jsonPath("$[1].name").value("Abbey"))
                 .andExpect(jsonPath("$[1].specialization").value("surgeon"));
+    }
+
+    @Test
+    public void findDoctorsByNameAndSpecializations() throws Exception {
+        Integer id1 = addDoctor(1, "Abrams", "dentist");
+        Integer id2 = addDoctor(2, "Abbott", "surgeon");
+        Integer id3 = addDoctor(3, "archibald", "therapist");
+        Integer id4 = addDoctor(4, "abbey", "surgeon");
+
+        this.mockMvc.perform(get("/doctors?specializations={spec}&name={name}", "surgeon,dentist", "Ab")
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$[0].id").value(id1))
+                .andExpect(jsonPath("$[0].name").value("Abrams"))
+                .andExpect(jsonPath("$[0].specialization").value("dentist"))
+                .andExpect(jsonPath("$[1].id").value(id2))
+                .andExpect(jsonPath("$[1].name").value("Abbott"))
+                .andExpect(jsonPath("$[1].specialization").value("surgeon"))
+                .andExpect(jsonPath("$[2].id").value(id4))
+                .andExpect(jsonPath("$[2].name").value("abbey"))
+                .andExpect(jsonPath("$[2].specialization").value("surgeon"));
     }
 
     @Test
@@ -115,27 +138,37 @@ public class DoctorControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        assertEquals(doctorRepository.findAll().size(), 1);
+        assertEquals(1, doctorRepository.findAll().size());
 
         Doctor savedDoctor = doctorRepository.findAll().get(0);
-        assertEquals(savedDoctor.getName(), "Hide");
-        assertEquals(savedDoctor.getSpecialization(), "dentist");
+        assertEquals("Hide", savedDoctor.getName());
+        assertEquals("dentist", savedDoctor.getSpecialization());
+    }
+
+    @Test
+    public void createDoctorSpecializationNotExist() throws Exception {
+        this.mockMvc.perform(post("/doctors")
+                .content("{\"name\": \"Hide\", \"specialization\": \"dentist1\"}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        assertEquals(0, doctorRepository.findAll().size());
     }
 
     @Test
     public void updateDoctor() throws Exception {
-        addDoctor(1, "Hide", "dentist");
+        Integer id = addDoctor(1, "Hide", "dentist");
 
-        this.mockMvc.perform(put("/doctors/{id}", "1")
-                .content("{\"id\": 1, \"name\": \"Dolittle\", \"specialization\": \"surgeon\"}")
+        this.mockMvc.perform(put("/doctors/{id}", id)
+                .content("{\"name\": \"Dolittle\", \"specialization\": \"surgeon\"}")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
-        assertEquals(doctorRepository.findAll().size(), 1);
+        assertEquals(1, doctorRepository.findAll().size());
 
         Doctor savedDoctor = doctorRepository.findAll().get(0);
-        assertEquals(savedDoctor.getName(), "Dolittle");
-        assertEquals(savedDoctor.getSpecialization(), "surgeon");
+        assertEquals("Dolittle", savedDoctor.getName());
+        assertEquals("surgeon", savedDoctor.getSpecialization());
     }
 
     @Test
@@ -143,25 +176,41 @@ public class DoctorControllerTest {
         addDoctor(1, "Hide", "dentist");
 
         this.mockMvc.perform(put("/doctors/{id}", "2")
-                .content("{\"id\": 2, \"name\": \"Dolittle\", \"specialization\": \"surgeon\"}")
+                .content("{\"name\": \"Dolittle\", \"specialization\": \"surgeon\"}")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
-        assertEquals(doctorRepository.findAll().size(), 1);
+        assertEquals(1, doctorRepository.findAll().size());
 
         Doctor savedDoctor = doctorRepository.findAll().get(0);
-        assertEquals(savedDoctor.getName(), "Hide");
-        assertEquals(savedDoctor.getSpecialization(), "dentist");
+        assertEquals("Hide", savedDoctor.getName());
+        assertEquals("dentist", savedDoctor.getSpecialization());
+    }
+
+    @Test
+    public void updateDoctorSpecializationNotExist() throws Exception {
+        Integer id = addDoctor(1, "Hide", "dentist");
+
+        this.mockMvc.perform(put("/doctors/{id}", id)
+                .content("{\"name\": \"Dolittle\", \"specialization\": \"surgeon1\"}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        assertEquals(1, doctorRepository.findAll().size());
+
+        Doctor savedDoctor = doctorRepository.findAll().get(0);
+        assertEquals("Hide", savedDoctor.getName());
+        assertEquals("dentist", savedDoctor.getSpecialization());
     }
 
     @Test
     public void deleteDoctor() throws Exception {
-        addDoctor(1, "Hide", "dentist");
+        Integer id = addDoctor(1, "Hide", "dentist");
 
-        this.mockMvc.perform(delete("/doctors/{id}", "1"))
+        this.mockMvc.perform(delete("/doctors/{id}", id))
                 .andExpect(status().isNoContent());
 
-        assertEquals(doctorRepository.findAll().size(), 0);
+        assertEquals(0, doctorRepository.findAll().size());
     }
 
     @Test
@@ -171,6 +220,6 @@ public class DoctorControllerTest {
         this.mockMvc.perform(delete("/doctors/{id}", "2"))
                 .andExpect(status().isNotFound());
 
-        assertEquals(doctorRepository.findAll().size(), 1);
+        assertEquals(1, doctorRepository.findAll().size());
     }
 }
