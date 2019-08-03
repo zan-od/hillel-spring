@@ -17,3 +17,12 @@ spring:
   h2:
     console:
       enabled: true
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql:postgre
+    username: postgre
+    password: postgre
