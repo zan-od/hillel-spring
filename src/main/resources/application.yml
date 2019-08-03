@@ -21,8 +21,16 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: create
+      database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        temp:
+          use_jdbc_metadata_defaults: false
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql:postgre
-    username: postgre
-    password: postgre
+    url: jdbc:postgresql://192.168.0.107/doctors
+    username: user
+    password: test
+
+#logging.level.org.hibernate.SQL: debug
+#logging.level.org.hibernate.type.descriptor.sql: trace
