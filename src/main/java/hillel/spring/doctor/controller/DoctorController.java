@@ -108,7 +108,9 @@ public class DoctorController {
     }
 
     @ExceptionHandler
-    @ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "Unknown specialization")
-    public void noSuchDoctorHandler(UnknownSpecializationException ex) {
+    public ResponseEntity<?> unknownSpecializationHandler(UnknownSpecializationException ex){
+        return ResponseEntity
+                .badRequest()
+                .body(ex.getLocalizedMessage());
     }
 }

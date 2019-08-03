@@ -127,7 +127,7 @@ public class DoctorService {
 
     private void assertSpecializationExists(Doctor doctor) {
         if (findSpecialization(doctor.getSpecialization()).isEmpty()) {
-            throw new UnknownSpecializationException();
+            throw new UnknownSpecializationException("Unknown specialization: " + doctor.getSpecialization());
         }
     }
 }
