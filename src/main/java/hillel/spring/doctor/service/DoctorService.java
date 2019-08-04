@@ -92,7 +92,7 @@ public class DoctorService {
         try {
             doctorRepository.deleteById(id);
         } catch (EmptyResultDataAccessException e) {
-            throw new NoSuchDoctorException();
+            throw new NoSuchDoctorException(id);
         }
     }
 

@@ -33,7 +33,7 @@ public class DoctorController {
 
     @GetMapping("/doctors/{id}")
     public DoctorOutputDto findById(@PathVariable("id") Integer id) {
-        return doctorDtoConverter.toDto(doctorService.findById(id).orElseThrow(NoSuchDoctorException::new));
+        return doctorDtoConverter.toDto(doctorService.findById(id).orElseThrow(() -> new NoSuchDoctorException(id)));
     }
 
     @GetMapping("/doctors")
@@ -76,7 +76,7 @@ public class DoctorController {
         assertNotNull(id, "Path variable {id} not specified");
 
         if (!doctorService.findById(id).isPresent()) {
-            throw new NoSuchDoctorException();
+            throw new NoSuchDoctorException(id);
         }
 
         Doctor doctor = doctorDtoConverter.toModel(doctorDto, id);
