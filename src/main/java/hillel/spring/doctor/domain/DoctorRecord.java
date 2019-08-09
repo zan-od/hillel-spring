@@ -10,6 +10,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import java.time.LocalDateTime;
 
+import static org.springframework.util.Assert.notNull;
+
 /* This class stores data
    about all appointments of doctors
    There are no Doctor and Pet entity fields,
@@ -32,9 +34,7 @@ public class DoctorRecord {
     private LocalDateTime startDate;
 
     public Integer getStartHour() {
-        if (startDate == null) {
-            return null;
-        }
+        notNull(startDate, "Start date must be not null");
 
         return startDate.getHour();
     }
