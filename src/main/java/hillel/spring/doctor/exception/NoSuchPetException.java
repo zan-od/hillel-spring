@@ -4,8 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
-public class NoSuchDoctorException extends RuntimeException {
-    public NoSuchDoctorException(Integer id) {
-        super(String.format("Doctor with id %s not found", id));
+public class NoSuchPetException extends RuntimeException {
+    public NoSuchPetException(Integer id) {
+        super(String.format("Pet with id %s not found", id));
     }
 }
