@@ -15,7 +15,7 @@ import java.util.Set;
 @Entity
 public class Doctor {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String name;
     @ElementCollection(fetch = FetchType.EAGER)
