@@ -33,6 +33,7 @@ dependencies {
 
 	runtimeOnly 'com.h2database:h2'
 	runtimeOnly 'org.postgresql:postgresql'
+    testCompile "org.testcontainers:postgresql:1.11.3"
 }
 
 compileJava {
