@@ -217,4 +217,80 @@ public class DoctorScheduleControllerTest {
 
         assertEquals(4, doctorRecordRepository.findAll().size());
     }
+
+    @Test
+    public void moveDoctorRecords() throws Exception {
+        //given
+        Integer doctorId1 = addDoctor("Hide");
+        Integer doctorId2 = addDoctor("Abbott");
+        Integer petId = addPet("Tom");
+
+        this.mockMvc.perform(post("/doctors/{id}/schedule/{date}/{hour}", doctorId1, "2019-08-04", 10)
+                .content("{\"petId\": " + petId + "}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        this.mockMvc.perform(post("/doctors/{id}/schedule/{date}/{hour}", doctorId1, "2019-08-04", 12)
+                .content("{\"petId\": " + petId + "}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        this.mockMvc.perform(post("/doctors/{id}/schedule/{date}/{hour}", doctorId2, "2019-08-04", 15)
+                .content("{\"petId\": " + petId + "}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        this.mockMvc.perform(post("/doctors/{id}/schedule/{date}/{hour}", doctorId2, "2019-08-04", 14)
+                .content("{\"petId\": " + petId + "}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        // when
+        LocalDateTime startDate = LocalDateTime.parse("2019-08-04T09:00:00");
+        this.mockMvc.perform(post("/doctors/{id}/schedule/move/{id2}", doctorId1, doctorId2)
+                .param("dateFrom", "2019-08-04T09:00:00"))
+                .andExpect(status().isOk());
+
+        // then
+        assertEquals(0, doctorRecordRepository.findByDoctorIdAndStartDateGreaterThanEqual(doctorId1, startDate).size());
+        assertEquals(4, doctorRecordRepository.findByDoctorIdAndStartDateGreaterThanEqual(doctorId2, startDate).size());
+    }
+
+    @Test
+    public void moveDoctorRecordsAlreadyAssignedDate() throws Exception {
+        //given
+        Integer doctorId1 = addDoctor("Hide");
+        Integer doctorId2 = addDoctor("Abbott");
+        Integer petId = addPet("Tom");
+
+        this.mockMvc.perform(post("/doctors/{id}/schedule/{date}/{hour}", doctorId1, "2019-08-04", 10)
+                .content("{\"petId\": " + petId + "}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        this.mockMvc.perform(post("/doctors/{id}/schedule/{date}/{hour}", doctorId1, "2019-08-04", 12)
+                .content("{\"petId\": " + petId + "}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        this.mockMvc.perform(post("/doctors/{id}/schedule/{date}/{hour}", doctorId2, "2019-08-04", 15)
+                .content("{\"petId\": " + petId + "}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        this.mockMvc.perform(post("/doctors/{id}/schedule/{date}/{hour}", doctorId2, "2019-08-04", 12)
+                .content("{\"petId\": " + petId + "}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        // when
+        LocalDateTime startDate = LocalDateTime.parse("2019-08-04T09:00:00");
+        this.mockMvc.perform(post("/doctors/{id}/schedule/move/{id2}", doctorId1, doctorId2)
+                .param("dateFrom", "2019-08-04T09:00:00"))
+                .andExpect(status().isBadRequest());
+
+        // then
+        assertEquals(2, doctorRecordRepository.findByDoctorIdAndStartDateGreaterThanEqual(doctorId1, startDate).size());
+        assertEquals(2, doctorRecordRepository.findByDoctorIdAndStartDateGreaterThanEqual(doctorId2, startDate).size());
+    }
 }

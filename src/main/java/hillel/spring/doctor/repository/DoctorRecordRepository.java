@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface DoctorRecordRepository extends JpaRepository<DoctorRecord, Integer> {
     List<DoctorRecord> findByDoctorIdAndStartDateBetween(Integer doctorId, LocalDateTime startDate, LocalDateTime endDate);
+
+    List<DoctorRecord> findByDoctorIdAndStartDateGreaterThanEqual(Integer doctorId, LocalDateTime startDate);
 }
