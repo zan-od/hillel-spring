@@ -65,7 +65,7 @@ public class DoctorScheduleController {
     public ResponseEntity<?> moveDoctorRecords(
             @PathVariable("id") Integer doctorId,
             @PathVariable("toDoctorId") Integer toDoctorId,
-            @RequestParam("dateFrom") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") Optional<LocalDateTime> dateFrom) {
+            @RequestParam("dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<LocalDateTime> dateFrom) {
 
         doctorScheduleService.moveDoctorRecords(doctorId, toDoctorId, dateFrom.orElse(LocalDateTime.now()));
 
