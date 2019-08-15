@@ -1,5 +1,6 @@
 package hillel.spring.doctor.controller;
 
+import hillel.spring.TestRunner;
 import hillel.spring.doctor.domain.Doctor;
 import hillel.spring.doctor.domain.DoctorRecord;
 import hillel.spring.doctor.domain.Pet;
@@ -10,8 +11,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,8 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest
-@AutoConfigureMockMvc
+@TestRunner
 public class DoctorScheduleControllerTest {
 
     @Autowired
@@ -218,5 +216,81 @@ public class DoctorScheduleControllerTest {
                 .andExpect(jsonPath("$.hourToPetId.12").doesNotExist());
 
         assertEquals(4, doctorRecordRepository.findAll().size());
+    }
+
+    @Test
+    public void moveDoctorRecords() throws Exception {
+        //given
+        Integer doctorId1 = addDoctor("Hide");
+        Integer doctorId2 = addDoctor("Abbott");
+        Integer petId = addPet("Tom");
+
+        this.mockMvc.perform(post("/doctors/{id}/schedule/{date}/{hour}", doctorId1, "2019-08-04", 10)
+                .content("{\"petId\": " + petId + "}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        this.mockMvc.perform(post("/doctors/{id}/schedule/{date}/{hour}", doctorId1, "2019-08-04", 12)
+                .content("{\"petId\": " + petId + "}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        this.mockMvc.perform(post("/doctors/{id}/schedule/{date}/{hour}", doctorId2, "2019-08-04", 15)
+                .content("{\"petId\": " + petId + "}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        this.mockMvc.perform(post("/doctors/{id}/schedule/{date}/{hour}", doctorId2, "2019-08-04", 14)
+                .content("{\"petId\": " + petId + "}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        // when
+        LocalDateTime startDate = LocalDateTime.parse("2019-08-04T09:00:00");
+        this.mockMvc.perform(post("/doctors/{id}/schedule/move/{id2}", doctorId1, doctorId2)
+                .param("dateFrom", "2019-08-04T09:00:00"))
+                .andExpect(status().isOk());
+
+        // then
+        assertEquals(0, doctorRecordRepository.findByDoctorIdAndStartDateGreaterThanEqual(doctorId1, startDate).size());
+        assertEquals(4, doctorRecordRepository.findByDoctorIdAndStartDateGreaterThanEqual(doctorId2, startDate).size());
+    }
+
+    @Test
+    public void moveDoctorRecordsAlreadyAssignedDate() throws Exception {
+        //given
+        Integer doctorId1 = addDoctor("Hide");
+        Integer doctorId2 = addDoctor("Abbott");
+        Integer petId = addPet("Tom");
+
+        this.mockMvc.perform(post("/doctors/{id}/schedule/{date}/{hour}", doctorId1, "2019-08-04", 10)
+                .content("{\"petId\": " + petId + "}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        this.mockMvc.perform(post("/doctors/{id}/schedule/{date}/{hour}", doctorId1, "2019-08-04", 12)
+                .content("{\"petId\": " + petId + "}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        this.mockMvc.perform(post("/doctors/{id}/schedule/{date}/{hour}", doctorId2, "2019-08-04", 15)
+                .content("{\"petId\": " + petId + "}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        this.mockMvc.perform(post("/doctors/{id}/schedule/{date}/{hour}", doctorId2, "2019-08-04", 12)
+                .content("{\"petId\": " + petId + "}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        // when
+        LocalDateTime startDate = LocalDateTime.parse("2019-08-04T09:00:00");
+        this.mockMvc.perform(post("/doctors/{id}/schedule/move/{id2}", doctorId1, doctorId2)
+                .param("dateFrom", "2019-08-04T09:00:00"))
+                .andExpect(status().isBadRequest());
+
+        // then
+        assertEquals(2, doctorRecordRepository.findByDoctorIdAndStartDateGreaterThanEqual(doctorId1, startDate).size());
+        assertEquals(2, doctorRecordRepository.findByDoctorIdAndStartDateGreaterThanEqual(doctorId2, startDate).size());
     }
 }

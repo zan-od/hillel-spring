@@ -6,6 +6,7 @@ import hillel.spring.doctor.exception.NoSuchDoctorException;
 import hillel.spring.doctor.exception.NoSuchPetException;
 import hillel.spring.doctor.repository.DoctorRecordRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -57,7 +58,12 @@ public class DoctorScheduleService {
                 .startDate(startDate)
                 .build();
 
-        return doctorRecordRepository.save(record);
+        try {
+            return doctorRecordRepository.save(record);
+        } catch (DataIntegrityViolationException ex) {
+            throw new InvalidScheduleException(
+                    String.format("Error creating doctor record: %s)", ex.getLocalizedMessage()));
+        }
     }
 
     public List<DoctorRecord> findDoctorRecordsByDay(Integer doctorId, LocalDate date) {
@@ -105,4 +111,48 @@ public class DoctorScheduleService {
 
         return hours;
     }
+
+    public void moveDoctorRecords(Integer fromDoctorId, Integer toDoctorId, LocalDateTime fromTime) {
+        notNull(fromDoctorId, "fromDoctorId must be not null");
+        notNull(toDoctorId, "toDoctorId must be not null");
+
+        if (doctorService.findById(fromDoctorId).isEmpty()) {
+            throw new NoSuchDoctorException(fromDoctorId);
+        }
+        if (doctorService.findById(toDoctorId).isEmpty()) {
+            throw new NoSuchDoctorException(fromDoctorId);
+        }
+
+        List<DoctorRecord> recordsToMove = doctorRecordRepository.findByDoctorIdAndStartDateGreaterThanEqual(fromDoctorId, fromTime);
+        List<DoctorRecord> existedRecords = doctorRecordRepository.findByDoctorIdAndStartDateGreaterThanEqual(toDoctorId, fromTime);
+
+        Set<LocalDateTime> assignedDates = existedRecords.stream()
+                .map(record -> record.getStartDate())
+                .collect(Collectors.toSet());
+
+        List<LocalDateTime> conflictingDates = recordsToMove.stream()
+                .map(record -> record.getStartDate())
+                .filter(date -> assignedDates.contains(date))
+                .collect(Collectors.toList());
+
+        if (!conflictingDates.isEmpty()) {
+            throw new InvalidScheduleException(
+                    String.format(
+                            "Error moving records from doctor #%d to #%d: there is already appointed dates:\n" +
+                                    "%s"
+                            , fromDoctorId, toDoctorId, conflictingDates.toString()));
+        }
+
+        recordsToMove.forEach(record -> record.setDoctorId(toDoctorId));
+
+        try {
+            doctorRecordRepository.saveAll(recordsToMove);
+        } catch (DataIntegrityViolationException ex) {
+            throw new InvalidScheduleException(
+                    String.format(
+                            "Error moving records from doctor #%d to #%d: %s)"
+                            , fromDoctorId, toDoctorId, ex.getLocalizedMessage()));
+        }
+    }
+
 }

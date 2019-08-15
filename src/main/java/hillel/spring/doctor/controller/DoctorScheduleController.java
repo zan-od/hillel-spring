@@ -15,7 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -57,6 +59,17 @@ public class DoctorScheduleController {
         return ResponseEntity.
                 status(HttpStatus.CREATED).
                 body(doctorRecordDtoConverter.toDto(record));
+    }
+
+    @PostMapping("/doctors/{id}/schedule/move/{toDoctorId}")
+    public ResponseEntity<?> moveDoctorRecords(
+            @PathVariable("id") Integer doctorId,
+            @PathVariable("toDoctorId") Integer toDoctorId,
+            @RequestParam("dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<LocalDateTime> dateFrom) {
+
+        doctorScheduleService.moveDoctorRecords(doctorId, toDoctorId, dateFrom.orElse(LocalDateTime.now()));
+
+        return ResponseEntity.ok().build();
     }
 
     private void assertNotNull(Object value, String message) {
