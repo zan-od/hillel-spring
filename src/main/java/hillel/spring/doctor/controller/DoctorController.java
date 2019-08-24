@@ -11,6 +11,7 @@ import hillel.spring.doctor.exception.NoSuchDoctorException;
 import hillel.spring.doctor.exception.UnknownSpecializationException;
 import hillel.spring.doctor.service.DoctorService;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class DoctorController {
     private final DoctorService doctorService;
+    @Autowired
     private final DoctorDtoConverter doctorDtoConverter;
     private final DoctorWorkingHoursConfig doctorWorkingHoursConfig;
     private final DoctorSpecializationsConfig doctorSpecializationsConfig;

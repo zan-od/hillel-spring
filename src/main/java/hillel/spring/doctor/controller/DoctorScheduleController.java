@@ -1,12 +1,10 @@
 package hillel.spring.doctor.controller;
 
 import hillel.spring.doctor.domain.DoctorRecord;
-import hillel.spring.doctor.dto.DoctorRecordDtoConverter;
-import hillel.spring.doctor.dto.DoctorScheduleDto;
-import hillel.spring.doctor.dto.DoctorScheduleDtoConverter;
-import hillel.spring.doctor.dto.PetIdDto;
+import hillel.spring.doctor.dto.*;
 import hillel.spring.doctor.exception.BadRequestException;
 import hillel.spring.doctor.exception.InvalidScheduleException;
+import hillel.spring.doctor.exception.NoSuchDoctorRecordException;
 import hillel.spring.doctor.service.DoctorScheduleService;
 import lombok.AllArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -41,6 +39,13 @@ public class DoctorScheduleController {
                                 summingInt(DoctorRecord::getPetId))); //only one record with specified hour must be
 
         return doctorScheduleDtoConverter.toDto(hourToPetId);
+    }
+
+    @GetMapping("/doctors/records/{id}")
+    public DoctorRecordDto findDoctorRecord(@PathVariable("id") Integer doctorRecordId) {
+        return doctorScheduleDtoConverter.toRecordDto(
+                doctorScheduleService.findById(doctorRecordId)
+                        .orElseThrow(() -> new NoSuchDoctorRecordException(doctorRecordId)));
     }
 
     @PostMapping("/doctors/{id}/schedule/{date}/{hour}")

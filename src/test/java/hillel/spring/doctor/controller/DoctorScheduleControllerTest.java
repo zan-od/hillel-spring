@@ -1,6 +1,5 @@
 package hillel.spring.doctor.controller;
 
-import hillel.spring.TestRunner;
 import hillel.spring.doctor.domain.Doctor;
 import hillel.spring.doctor.domain.DoctorRecord;
 import hillel.spring.doctor.domain.Pet;
@@ -11,6 +10,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -24,7 +25,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
-@TestRunner
+@SpringBootTest
+@AutoConfigureMockMvc
+//@TestRunner
 public class DoctorScheduleControllerTest {
 
     @Autowired
@@ -49,7 +52,27 @@ public class DoctorScheduleControllerTest {
     }
 
     private Integer addPet(String name) {
-        return petRepository.save(new Pet(null, name, null)).getId();
+        return petRepository.save(new Pet(null, name, null, null, null)).getId();
+    }
+
+    @Test
+    public void findDoctorRecord() throws Exception {
+        Integer doctorId = addDoctor("Hide");
+        Integer petId = addPet("Tom");
+
+        DoctorRecord doctorRecord = new DoctorRecord();
+        doctorRecord.setDoctorId(doctorId);
+        doctorRecord.setPetId(petId);
+        doctorRecord.setStartDate(LocalDateTime.parse("2019-08-04T13:00:00"));
+
+        Integer doctorRecordId = doctorRecordRepository.save(doctorRecord).getId();
+
+        this.mockMvc.perform(get("/doctors/records/{id}", doctorRecordId)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.doctorId").value(doctorId))
+                .andExpect(jsonPath("$.petId").value(petId))
+                .andExpect(jsonPath("$.startDate").value(LocalDateTime.parse("2019-08-04T13:00:00")));
     }
 
     @Test

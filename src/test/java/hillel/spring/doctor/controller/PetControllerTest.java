@@ -31,7 +31,7 @@ public class PetControllerTest {
     }
 
     private Integer addPet(String name, String kind) {
-        return petRepository.save(new Pet(null, name, kind)).getId();
+        return petRepository.save(new Pet(null, name, kind, null, null)).getId();
     }
 
     @Test

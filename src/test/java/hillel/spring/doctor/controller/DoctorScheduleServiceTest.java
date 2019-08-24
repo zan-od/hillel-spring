@@ -45,7 +45,7 @@ public class DoctorScheduleServiceTest extends AbstractTestNGSpringContextTests 
     }
 
     private Integer addPet(String name) {
-        return petRepository.save(new Pet(null, name, null)).getId();
+        return petRepository.save(new Pet(null, name, null, null, null)).getId();
     }
 
     @BeforeClass
