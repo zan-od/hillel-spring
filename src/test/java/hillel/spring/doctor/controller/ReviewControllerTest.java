@@ -22,8 +22,7 @@ import java.util.Optional;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -205,5 +204,73 @@ public class ReviewControllerTest {
                 .andExpect(jsonPath("$.reviewComments[3].comment").isEmpty())
                 .andExpect(jsonPath("$.reviewComments[4].comment").value("comment5"));
 
+    }
+
+    @Test
+    public void updateReview() throws Exception {
+        Integer doctorId = addDoctor("Hide");
+        Integer petId = addPet("Tom");
+        Integer doctorRecordId = addDoctorRecord(doctorId, petId, LocalDateTime.parse("2019-08-24T10:00:00"));
+
+        Integer reviewId = addReview(doctorRecordId, LocalDateTime.parse("2019-08-24T11:00:00"), (byte) 1, (byte) 2, (byte) 3, (byte) 4, null, "comment1");
+
+        String content = "{\"doctorRecordId\": \"" + doctorRecordId + "\", " +
+                "\"reviewDate\": \"2019-08-24T11:00:05\", " +
+                "\"serviceRating\": 5, " +
+                "\"equipmentRating\": 4," +
+                "\"qualificationRating\": 3," +
+                "\"treatmentRating\": 2," +
+                "\"totalRating\": 1," +
+                "\"reviewComment\": \"comment\"" +
+                "}";
+
+        this.mockMvc.perform(put("/doctors/reviews/{id}", reviewId)
+                .content(content)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+
+        assertEquals(1, reviewRepository.findAll().size());
+
+        Review review = reviewRepository.findAll().get(0);
+
+        assertEquals(reviewId, review.getId());
+        assertEquals(doctorRecordId, review.getDoctorRecordId());
+        assertEquals(LocalDateTime.parse("2019-08-24T12:00:00"), review.getReviewDate()); //"current" time
+        assertEquals(Optional.of((byte) 5), review.getServiceRating());
+        assertEquals(Optional.of((byte) 4), review.getEquipmentRating());
+        assertEquals(Optional.of((byte) 3), review.getQualificationRating());
+        assertEquals(Optional.of((byte) 2), review.getTreatmentRating());
+        assertEquals(Optional.of((byte) 1), review.getTotalRating());
+        assertEquals(Optional.of("comment"), review.getReviewComment());
+    }
+
+    @Test
+    public void patchReview() throws Exception {
+        Integer doctorId = addDoctor("Hide");
+        Integer petId = addPet("Tom");
+        Integer doctorRecordId = addDoctorRecord(doctorId, petId, LocalDateTime.parse("2019-08-24T10:00:00"));
+
+        Integer reviewId = addReview(doctorRecordId, LocalDateTime.parse("2019-08-24T11:00:00"), (byte) 1, (byte) 2, (byte) 3, (byte) 4, null, "comment1");
+
+        String content = "{\"serviceRating\": 5, \"totalRating\": 1}";
+
+        this.mockMvc.perform(patch("/doctors/reviews/{id}", reviewId)
+                .content(content)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+
+        assertEquals(1, reviewRepository.findAll().size());
+
+        Review review = reviewRepository.findAll().get(0);
+
+        assertEquals(reviewId, review.getId());
+        assertEquals(doctorRecordId, review.getDoctorRecordId());
+        assertEquals(LocalDateTime.parse("2019-08-24T12:00:00"), review.getReviewDate()); //"current" time
+        assertEquals(Optional.of((byte) 5), review.getServiceRating());
+        assertEquals(Optional.of((byte) 2), review.getEquipmentRating());
+        assertEquals(Optional.of((byte) 3), review.getQualificationRating());
+        assertEquals(Optional.of((byte) 4), review.getTreatmentRating());
+        assertEquals(Optional.of((byte) 1), review.getTotalRating());
+        assertEquals(Optional.of("comment1"), review.getReviewComment());
     }
 }

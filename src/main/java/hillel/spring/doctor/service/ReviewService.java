@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.springframework.util.Assert.notNull;
@@ -27,9 +28,17 @@ public class ReviewService {
         return reviewRepository.findById(id);
     }
 
-    public Review create(Review review) {
-        validateReview(review);
+    public Review save(Review review) {
+        notNull(review.getDoctorRecordId(), "Doctor record id must be not null");
 
+        if (review.isEmpty()) {
+            throw new BadRequestException("Review must contain at least one rating or comment");
+        }
+        if (!review.ratingsValid()) {
+            throw new BadRequestException("Rating values must be in range 1-5");
+        }
+
+        // review date is set to current after every update
         review.setReviewDate(LocalDateTime.now(clock));
 
         Optional<DoctorRecord> maybeDoctorRecord = doctorScheduleService.findById(review.getDoctorRecordId());
@@ -47,27 +56,13 @@ public class ReviewService {
         return reviewRepository.save(review);
     }
 
-    private void validateReview(Review review) {
-        notNull(review.getDoctorRecordId(), "Doctor record id must be not null");
-
-        if (review.isEmpty()) {
-            throw new BadRequestException("Review must contain at least one rating or comment");
-        }
-        if (!review.ratingsValid()) {
-            throw new BadRequestException("Rating values must be in range 1-5");
-        }
-    }
-
-    public Review save(Review review) {
-        validateReview(review);
-
-        return reviewRepository.save(review);
-    }
-
     public ReviewReportAverageRatingDto getAverageRatings() {
         ReviewReportAverageRatingDto dto = reviewRepository.getRatingsAverages();
         dto.setReviewComments(reviewRepository.getReviewComments());
         return dto;
     }
 
+    public List<Review> listReviews() {
+        return reviewRepository.findAll();
+    }
 }
