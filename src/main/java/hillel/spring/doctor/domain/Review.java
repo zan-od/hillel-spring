@@ -53,4 +53,19 @@ public class Review {
     public Optional<String> getReviewComment() {
         return Optional.ofNullable(reviewComment);
     }
+
+    public boolean isEmpty() {
+        return (serviceRating == null) && (equipmentRating == null) &&
+                (qualificationRating == null) && (treatmentRating == null) &&
+                (totalRating == null) && (reviewComment == null);
+    }
+
+    public boolean ratingsValid() {
+        return isRatingValid(serviceRating) && isRatingValid(equipmentRating) &&
+                isRatingValid(qualificationRating) && isRatingValid(treatmentRating) && isRatingValid(totalRating);
+    }
+
+    private boolean isRatingValid(Byte value) {
+        return value == null || ((value >= 1) && (value <= 5));
+    }
 }

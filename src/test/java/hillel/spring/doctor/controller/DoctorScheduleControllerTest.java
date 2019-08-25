@@ -72,7 +72,7 @@ public class DoctorScheduleControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.doctorId").value(doctorId))
                 .andExpect(jsonPath("$.petId").value(petId))
-                .andExpect(jsonPath("$.startDate").value(LocalDateTime.parse("2019-08-04T13:00:00")));
+                .andExpect(jsonPath("$.startDate").value("2019-08-04T13:00:00"));
     }
 
     @Test
