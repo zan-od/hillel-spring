@@ -64,7 +64,7 @@ public class ReviewControllerTest {
 
     private Integer addReview(Integer doctorRecordId, LocalDateTime date, Byte serviceRating, Byte equipmentRating,
                               Byte qualificationRating, Byte treatmentRating, Byte totalRating, String comment) {
-        return reviewRepository.save(new Review(null, doctorRecordId, date, serviceRating, equipmentRating,
+        return reviewRepository.save(new Review(null, null, doctorRecordId, date, serviceRating, equipmentRating,
                 qualificationRating, treatmentRating, totalRating, comment)).getId();
     }
 

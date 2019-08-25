@@ -12,12 +12,15 @@ import java.util.Optional;
 public interface ReviewDtoConverter {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "reviewDate", ignore = true)
+    @Mapping(target = "version", ignore = true)
     Review toModel(ReviewInputDto dto);
 
     @Mapping(target = "reviewDate", ignore = true)
+    @Mapping(target = "version", ignore = true)
     Review toModel(ReviewInputDto dto, Integer id);
 
     @Mapping(target = "reviewDate", ignore = true)
+    @Mapping(target = "version", ignore = true)
     void update(@MappingTarget Review review, ReviewInputDto dto);
 
     ReviewOutputDto toOutputDto(Review review);

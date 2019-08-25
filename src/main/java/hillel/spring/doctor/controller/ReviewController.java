@@ -8,7 +8,9 @@ import hillel.spring.doctor.dto.ReviewReportAverageRatingDto;
 import hillel.spring.doctor.exception.ResourceNotFoundException;
 import hillel.spring.doctor.service.ReviewService;
 import lombok.AllArgsConstructor;
+import org.hibernate.StaleObjectStateException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -40,6 +42,7 @@ public class ReviewController {
     }
 
     @PutMapping("/doctors/reviews/{id}")
+    @Retryable(StaleObjectStateException.class)
     public ResponseEntity<?> updateDoctorRecordReview(@PathVariable("id") Integer id,
                                                       @RequestBody ReviewInputDto reviewInputDto) {
 
@@ -52,6 +55,7 @@ public class ReviewController {
     }
 
     @PatchMapping("/doctors/reviews/{id}")
+    @Retryable(StaleObjectStateException.class)
     public ResponseEntity<?> patchDoctorRecordReview(@PathVariable("id") Integer id,
                                                      @RequestBody ReviewInputDto reviewInputDto) {
 
