@@ -62,7 +62,7 @@ public class ReviewControllerTest {
         return doctorRecordRepository.save(new DoctorRecord(null, doctorId, petId, startDate)).getId();
     }
 
-    private Integer addReview(Integer doctorRecordId, LocalDateTime date, Byte serviceRating, Byte equipmentRating,
+    private Integer addReview(Integer doctorRecordId, LocalDateTime date, Integer serviceRating, Byte equipmentRating,
                               Byte qualificationRating, Byte treatmentRating, Byte totalRating, String comment) {
         return reviewRepository.save(new Review(null, null, doctorRecordId, date, serviceRating, equipmentRating,
                 qualificationRating, treatmentRating, totalRating, comment)).getId();
@@ -181,10 +181,10 @@ public class ReviewControllerTest {
         Integer doctorRecordId = 1;
         LocalDateTime date = LocalDateTime.parse("2019-08-24T10:00:00");
 
-        addReview(doctorRecordId, date, (byte) 1, (byte) 2, (byte) 3, (byte) 4, null, "comment1");
-        addReview(doctorRecordId, date, (byte) 5, (byte) 4, (byte) 3, (byte) 2, null, "comment2");
+        addReview(doctorRecordId, date, 1, (byte) 2, (byte) 3, (byte) 4, null, "comment1");
+        addReview(doctorRecordId, date, 5, (byte) 4, (byte) 3, (byte) 2, null, "comment2");
         addReview(doctorRecordId, date, null, (byte) 1, (byte) 1, (byte) 1, null, "comment3");
-        addReview(doctorRecordId, date, (byte) 3, (byte) 3, (byte) 3, (byte) 3, null, null);
+        addReview(doctorRecordId, date, 3, (byte) 3, (byte) 3, (byte) 3, null, null);
         addReview(doctorRecordId, date, null, null, (byte) 5, (byte) 1, null, "comment5");
 
         assertEquals(5, reviewRepository.findAll().size());
@@ -212,7 +212,7 @@ public class ReviewControllerTest {
         Integer petId = addPet("Tom");
         Integer doctorRecordId = addDoctorRecord(doctorId, petId, LocalDateTime.parse("2019-08-24T10:00:00"));
 
-        Integer reviewId = addReview(doctorRecordId, LocalDateTime.parse("2019-08-24T11:00:00"), (byte) 1, (byte) 2, (byte) 3, (byte) 4, null, "comment1");
+        Integer reviewId = addReview(doctorRecordId, LocalDateTime.parse("2019-08-24T11:00:00"), 1, (byte) 2, (byte) 3, (byte) 4, null, "comment1");
 
         String content = "{\"doctorRecordId\": \"" + doctorRecordId + "\", " +
                 "\"reviewDate\": \"2019-08-24T11:00:05\", " +
@@ -250,7 +250,7 @@ public class ReviewControllerTest {
         Integer petId = addPet("Tom");
         Integer doctorRecordId = addDoctorRecord(doctorId, petId, LocalDateTime.parse("2019-08-24T10:00:00"));
 
-        Integer reviewId = addReview(doctorRecordId, LocalDateTime.parse("2019-08-24T11:00:00"), (byte) 1, (byte) 2, (byte) 3, (byte) 4, null, "comment1");
+        Integer reviewId = addReview(doctorRecordId, LocalDateTime.parse("2019-08-24T11:00:00"), 1, (byte) 2, (byte) 3, (byte) 4, null, "comment1");
 
         String content = "{\"serviceRating\": 5, \"totalRating\": 1}";
 

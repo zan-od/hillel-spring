@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class ReviewInputDto {
     private Integer doctorRecordId;
 
-    private Byte serviceRating;
+    private Integer serviceRating;
     private Byte equipmentRating;
     private Byte qualificationRating;
     private Byte treatmentRating;

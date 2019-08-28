@@ -23,14 +23,15 @@ public class Review {
     private Integer doctorRecordId;
     private LocalDateTime reviewDate;
 
-    private Byte serviceRating;
+    @Column(columnDefinition = "int2")
+    private Integer serviceRating;
     private Byte equipmentRating;
     private Byte qualificationRating;
     private Byte treatmentRating;
     private Byte totalRating;
     private String reviewComment;
 
-    public Optional<Byte> getServiceRating() {
+    public Optional<Integer> getServiceRating() {
         return Optional.ofNullable(serviceRating);
     }
 
@@ -66,6 +67,10 @@ public class Review {
     }
 
     private boolean isRatingValid(Byte value) {
+        return value == null || ((value >= 1) && (value <= 5));
+    }
+
+    private boolean isRatingValid(Integer value) {
         return value == null || ((value >= 1) && (value <= 5));
     }
 }
