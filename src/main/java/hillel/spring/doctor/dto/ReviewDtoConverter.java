@@ -18,6 +18,7 @@ public interface ReviewDtoConverter {
     @Mapping(target = "reviewDate", ignore = true)
     Review toModel(ReviewInputDto dto, Integer id, Integer version);
 
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "reviewDate", ignore = true)
     @Mapping(target = "version", ignore = true)
     void update(@MappingTarget Review review, ReviewInputDto dto);

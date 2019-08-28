@@ -37,8 +37,6 @@ dependencies {
     testCompile "org.testcontainers:postgresql:1.11.3"
 
 	implementation 'org.flywaydb:flyway-core'
-
-	testCompile "org.testng:testng:6.11"
 }
 
 compileJava {

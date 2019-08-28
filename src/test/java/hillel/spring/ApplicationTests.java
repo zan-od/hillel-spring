@@ -1,4 +1,4 @@
-package hillel.spring.greeting;
+package hillel.spring;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
