@@ -31,10 +31,10 @@ public class ReviewService {
     public Review save(Review review) {
         notNull(review.getDoctorRecordId(), "Doctor record id must be not null");
 
-        if (review.isEmpty()) {
+        if (isEmptyReview(review)) {
             throw new BadRequestException("Review must contain at least one rating or comment");
         }
-        if (!review.ratingsValid()) {
+        if (!reviewRatingsValid(review)) {
             throw new BadRequestException("Rating values must be in range 1-5");
         }
 
@@ -64,5 +64,22 @@ public class ReviewService {
 
     public List<Review> listReviews() {
         return reviewRepository.findAll();
+    }
+
+    private boolean isEmptyReview(Review review) {
+        return (review.getServiceRating().isEmpty()) && (review.getEquipmentRating().isEmpty()) &&
+                (review.getQualificationRating().isEmpty()) && (review.getTreatmentRating().isEmpty()) &&
+                (review.getTotalRating().isEmpty()) && (review.getReviewComment().isEmpty());
+    }
+
+    private boolean reviewRatingsValid(Review review) {
+        return isRatingValid(review.getServiceRating()) && isRatingValid(review.getEquipmentRating()) &&
+                isRatingValid(review.getQualificationRating()) && isRatingValid(review.getTreatmentRating()) &&
+                isRatingValid(review.getTotalRating());
+    }
+
+    @SuppressWarnings(value = "OptionalUsedAsFieldOrParameterType")
+    private boolean isRatingValid(Optional<Integer> value) {
+        return value.isEmpty() || ((value.get() >= 1) && (value.get() <= 5));
     }
 }
