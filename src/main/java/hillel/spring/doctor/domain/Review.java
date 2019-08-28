@@ -25,29 +25,29 @@ public class Review {
 
     @Column(columnDefinition = "int2")
     private Integer serviceRating;
-    private Byte equipmentRating;
-    private Byte qualificationRating;
-    private Byte treatmentRating;
-    private Byte totalRating;
+    private Integer equipmentRating;
+    private Integer qualificationRating;
+    private Integer treatmentRating;
+    private Integer totalRating;
     private String reviewComment;
 
     public Optional<Integer> getServiceRating() {
         return Optional.ofNullable(serviceRating);
     }
 
-    public Optional<Byte> getEquipmentRating() {
+    public Optional<Integer> getEquipmentRating() {
         return Optional.ofNullable(equipmentRating);
     }
 
-    public Optional<Byte> getQualificationRating() {
+    public Optional<Integer> getQualificationRating() {
         return Optional.ofNullable(qualificationRating);
     }
 
-    public Optional<Byte> getTreatmentRating() {
+    public Optional<Integer> getTreatmentRating() {
         return Optional.ofNullable(treatmentRating);
     }
 
-    public Optional<Byte> getTotalRating() {
+    public Optional<Integer> getTotalRating() {
         return Optional.ofNullable(totalRating);
     }
 
@@ -64,10 +64,6 @@ public class Review {
     public boolean ratingsValid() {
         return isRatingValid(serviceRating) && isRatingValid(equipmentRating) &&
                 isRatingValid(qualificationRating) && isRatingValid(treatmentRating) && isRatingValid(totalRating);
-    }
-
-    private boolean isRatingValid(Byte value) {
-        return value == null || ((value >= 1) && (value <= 5));
     }
 
     private boolean isRatingValid(Integer value) {

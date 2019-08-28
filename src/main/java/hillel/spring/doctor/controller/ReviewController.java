@@ -46,11 +46,12 @@ public class ReviewController {
     public ResponseEntity<?> updateDoctorRecordReview(@PathVariable("id") Integer id,
                                                       @RequestBody ReviewInputDto reviewInputDto) {
 
-        if (!reviewService.findById(id).isPresent()) {
+        Optional<Review> maybeReview = reviewService.findById(id);
+        if (!maybeReview.isPresent()) {
             throw new ResourceNotFoundException(String.format("Review with id=%d not found", id));
         }
 
-        Review review = reviewService.save(reviewDtoConverter.toModel(reviewInputDto, id));
+        Review review = reviewService.save(reviewDtoConverter.toModel(reviewInputDto, id, maybeReview.get().getVersion()));
         return ResponseEntity.noContent().build();
     }
 

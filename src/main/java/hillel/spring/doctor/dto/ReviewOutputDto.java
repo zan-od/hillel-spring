@@ -8,9 +8,9 @@ public class ReviewOutputDto {
     private Integer doctorRecordId;
 
     private Integer serviceRating;
-    private Byte equipmentRating;
-    private Byte qualificationRating;
-    private Byte treatmentRating;
-    private Byte totalRating;
+    private Integer equipmentRating;
+    private Integer qualificationRating;
+    private Integer treatmentRating;
+    private Integer totalRating;
     private String reviewComment;
 }

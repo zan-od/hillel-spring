@@ -12,7 +12,6 @@ import hillel.spring.doctor.repository.ReviewRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,17 +29,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestRunner
 public class ReviewControllerTest {
 
-    @Autowired
     public MockMvc mockMvc;
 
-    @Autowired
-    ReviewRepository reviewRepository;
-    @Autowired
-    DoctorRecordRepository doctorRecordRepository;
-    @Autowired
-    DoctorRepository doctorRepository;
-    @Autowired
-    PetRepository petRepository;
+    public ReviewRepository reviewRepository;
+    public DoctorRecordRepository doctorRecordRepository;
+    public DoctorRepository doctorRepository;
+    public PetRepository petRepository;
 
     @Before
     public void clean() {
@@ -62,8 +56,8 @@ public class ReviewControllerTest {
         return doctorRecordRepository.save(new DoctorRecord(null, doctorId, petId, startDate)).getId();
     }
 
-    private Integer addReview(Integer doctorRecordId, LocalDateTime date, Integer serviceRating, Byte equipmentRating,
-                              Byte qualificationRating, Byte treatmentRating, Byte totalRating, String comment) {
+    private Integer addReview(Integer doctorRecordId, LocalDateTime date, Integer serviceRating, Integer equipmentRating,
+                              Integer qualificationRating, Integer treatmentRating, Integer totalRating, String comment) {
         return reviewRepository.save(new Review(null, null, doctorRecordId, date, serviceRating, equipmentRating,
                 qualificationRating, treatmentRating, totalRating, comment)).getId();
     }
@@ -92,10 +86,10 @@ public class ReviewControllerTest {
         Review savedReview = reviewRepository.findAll().get(0);
 
         assertEquals(doctorRecordId, savedReview.getDoctorRecordId());
-        assertEquals(Optional.of((byte) 1), savedReview.getServiceRating());
-        assertEquals(Optional.of((byte) 2), savedReview.getEquipmentRating());
-        assertEquals(Optional.of((byte) 3), savedReview.getQualificationRating());
-        assertEquals(Optional.of((byte) 4), savedReview.getTreatmentRating());
+        assertEquals(Optional.of(1), savedReview.getServiceRating());
+        assertEquals(Optional.of(2), savedReview.getEquipmentRating());
+        assertEquals(Optional.of(3), savedReview.getQualificationRating());
+        assertEquals(Optional.of(4), savedReview.getTreatmentRating());
         assertEquals(Optional.empty(), savedReview.getTotalRating());
         assertEquals(Optional.of("comment"), savedReview.getReviewComment());
     }
@@ -181,11 +175,11 @@ public class ReviewControllerTest {
         Integer doctorRecordId = 1;
         LocalDateTime date = LocalDateTime.parse("2019-08-24T10:00:00");
 
-        addReview(doctorRecordId, date, 1, (byte) 2, (byte) 3, (byte) 4, null, "comment1");
-        addReview(doctorRecordId, date, 5, (byte) 4, (byte) 3, (byte) 2, null, "comment2");
-        addReview(doctorRecordId, date, null, (byte) 1, (byte) 1, (byte) 1, null, "comment3");
-        addReview(doctorRecordId, date, 3, (byte) 3, (byte) 3, (byte) 3, null, null);
-        addReview(doctorRecordId, date, null, null, (byte) 5, (byte) 1, null, "comment5");
+        addReview(doctorRecordId, date, 1, 2, 3, 4, null, "comment1");
+        addReview(doctorRecordId, date, 5, 4, 3, 2, null, "comment2");
+        addReview(doctorRecordId, date, null, 1, 1, 1, null, "comment3");
+        addReview(doctorRecordId, date, 3, 3, 3, 3, null, null);
+        addReview(doctorRecordId, date, null, null, 5, 1, null, "comment5");
 
         assertEquals(5, reviewRepository.findAll().size());
 
@@ -212,7 +206,7 @@ public class ReviewControllerTest {
         Integer petId = addPet("Tom");
         Integer doctorRecordId = addDoctorRecord(doctorId, petId, LocalDateTime.parse("2019-08-24T10:00:00"));
 
-        Integer reviewId = addReview(doctorRecordId, LocalDateTime.parse("2019-08-24T11:00:00"), 1, (byte) 2, (byte) 3, (byte) 4, null, "comment1");
+        Integer reviewId = addReview(doctorRecordId, LocalDateTime.parse("2019-08-24T11:00:00"), 1, 2, 3, 4, null, "comment1");
 
         String content = "{\"doctorRecordId\": \"" + doctorRecordId + "\", " +
                 "\"reviewDate\": \"2019-08-24T11:00:05\", " +
@@ -236,11 +230,11 @@ public class ReviewControllerTest {
         assertEquals(reviewId, review.getId());
         assertEquals(doctorRecordId, review.getDoctorRecordId());
         assertEquals(LocalDateTime.parse("2019-08-24T12:00:00"), review.getReviewDate()); //"current" time
-        assertEquals(Optional.of((byte) 5), review.getServiceRating());
-        assertEquals(Optional.of((byte) 4), review.getEquipmentRating());
-        assertEquals(Optional.of((byte) 3), review.getQualificationRating());
-        assertEquals(Optional.of((byte) 2), review.getTreatmentRating());
-        assertEquals(Optional.of((byte) 1), review.getTotalRating());
+        assertEquals(Optional.of(5), review.getServiceRating());
+        assertEquals(Optional.of(4), review.getEquipmentRating());
+        assertEquals(Optional.of(3), review.getQualificationRating());
+        assertEquals(Optional.of(2), review.getTreatmentRating());
+        assertEquals(Optional.of(1), review.getTotalRating());
         assertEquals(Optional.of("comment"), review.getReviewComment());
     }
 
@@ -250,7 +244,7 @@ public class ReviewControllerTest {
         Integer petId = addPet("Tom");
         Integer doctorRecordId = addDoctorRecord(doctorId, petId, LocalDateTime.parse("2019-08-24T10:00:00"));
 
-        Integer reviewId = addReview(doctorRecordId, LocalDateTime.parse("2019-08-24T11:00:00"), 1, (byte) 2, (byte) 3, (byte) 4, null, "comment1");
+        Integer reviewId = addReview(doctorRecordId, LocalDateTime.parse("2019-08-24T11:00:00"), 1, 2, 3, 4, null, "comment1");
 
         String content = "{\"serviceRating\": 5, \"totalRating\": 1}";
 
@@ -266,11 +260,11 @@ public class ReviewControllerTest {
         assertEquals(reviewId, review.getId());
         assertEquals(doctorRecordId, review.getDoctorRecordId());
         assertEquals(LocalDateTime.parse("2019-08-24T12:00:00"), review.getReviewDate()); //"current" time
-        assertEquals(Optional.of((byte) 5), review.getServiceRating());
-        assertEquals(Optional.of((byte) 2), review.getEquipmentRating());
-        assertEquals(Optional.of((byte) 3), review.getQualificationRating());
-        assertEquals(Optional.of((byte) 4), review.getTreatmentRating());
-        assertEquals(Optional.of((byte) 1), review.getTotalRating());
+        assertEquals(Optional.of(5), review.getServiceRating());
+        assertEquals(Optional.of(2), review.getEquipmentRating());
+        assertEquals(Optional.of(3), review.getQualificationRating());
+        assertEquals(Optional.of(4), review.getTreatmentRating());
+        assertEquals(Optional.of(1), review.getTotalRating());
         assertEquals(Optional.of("comment1"), review.getReviewComment());
     }
 }
