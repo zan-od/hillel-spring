@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,6 +28,10 @@ public class DoctorScheduleService {
     private DoctorRecordRepository doctorRecordRepository;
     private DoctorService doctorService;
     private PetService petService;
+
+    public Optional<DoctorRecord> findById(Integer doctorRecordId) {
+        return doctorRecordRepository.findById(doctorRecordId);
+    }
 
     public DoctorRecord createDoctorRecord(Integer doctorId, Integer petId, LocalDate date, Integer hour) {
         notNull(date, "Date must be not null");
@@ -93,8 +98,7 @@ public class DoctorScheduleService {
         List<DoctorRecord> records = internalFindDoctorRecordsByDay(doctorId, date);
 
         Set<Integer> scheduledHours = records.stream()
-                .map(record -> record.getStartHour())
-                .distinct()
+                .map(DoctorRecord::getStartHour)
                 .collect(Collectors.toSet());
 
         return getDayScheduleHours().stream()
@@ -127,12 +131,12 @@ public class DoctorScheduleService {
         List<DoctorRecord> existedRecords = doctorRecordRepository.findByDoctorIdAndStartDateGreaterThanEqual(toDoctorId, fromTime);
 
         Set<LocalDateTime> assignedDates = existedRecords.stream()
-                .map(record -> record.getStartDate())
+                .map(DoctorRecord::getStartDate)
                 .collect(Collectors.toSet());
 
         List<LocalDateTime> conflictingDates = recordsToMove.stream()
-                .map(record -> record.getStartDate())
-                .filter(date -> assignedDates.contains(date))
+                .map(DoctorRecord::getStartDate)
+                .filter(assignedDates::contains)
                 .collect(Collectors.toList());
 
         if (!conflictingDates.isEmpty()) {
@@ -154,5 +158,4 @@ public class DoctorScheduleService {
                             , fromDoctorId, toDoctorId, ex.getLocalizedMessage()));
         }
     }
-
 }

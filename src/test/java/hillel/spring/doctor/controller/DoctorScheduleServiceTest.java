@@ -9,7 +9,6 @@ import hillel.spring.doctor.repository.DoctorRepository;
 import hillel.spring.doctor.repository.PetRepository;
 import hillel.spring.doctor.service.DoctorScheduleService;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.testng.annotations.BeforeClass;
@@ -25,16 +24,10 @@ import static org.junit.Assert.assertEquals;
 @TestRunner
 public class DoctorScheduleServiceTest extends AbstractTestNGSpringContextTests {
 
-    @Autowired
     public DoctorScheduleService doctorScheduleService;
-
-    @Autowired
     public DoctorRepository doctorRepository;
-
-    @Autowired
     public PetRepository petRepository;
 
-    @Autowired
     public DoctorRecordRepository doctorRecordRepository;
 
     private Integer doctorId;
@@ -45,7 +38,7 @@ public class DoctorScheduleServiceTest extends AbstractTestNGSpringContextTests 
     }
 
     private Integer addPet(String name) {
-        return petRepository.save(new Pet(null, name, null)).getId();
+        return petRepository.save(new Pet(null, name, null, null, null)).getId();
     }
 
     @BeforeClass
