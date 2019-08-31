@@ -36,3 +36,18 @@ hibernate:
 
 #logging.level.org.hibernate.SQL: debug
 #logging.level.org.hibernate.type.descriptor.sql: trace
+
+---
+spring.profiles: europe
+doctors:
+  host-name: localhost
+  working-hours:
+    startTime: 10
+    endTime: 17
+  specializations:
+    - surgeon
+    - therapist
+    - oculist
+    - psychologist
+    - dentist
+
