@@ -7,11 +7,12 @@ import hillel.spring.doctor.exception.BadRequestException;
 import hillel.spring.doctor.exception.ResourceNotFoundException;
 import hillel.spring.doctor.repository.ReviewRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 import static org.springframework.util.Assert.notNull;
@@ -62,8 +63,8 @@ public class ReviewService {
         return dto;
     }
 
-    public List<Review> listReviews() {
-        return reviewRepository.findAll();
+    public Page<Review> listReviews(Pageable pageable) {
+        return reviewRepository.findAll(pageable);
     }
 
     private boolean isEmptyReview(Review review) {

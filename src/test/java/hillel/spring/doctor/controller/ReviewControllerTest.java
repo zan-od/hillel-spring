@@ -273,4 +273,75 @@ public class ReviewControllerTest {
         assertEquals(Optional.of(1), review.getTotalRating());
         assertEquals(Optional.of("comment1"), review.getReviewComment());
     }
+
+    @Test
+    public void findAllReviewPageable() throws Exception {
+        Integer doctorRecordId = 1;
+
+        addReview(doctorRecordId, LocalDateTime.parse("2019-08-24T10:00:00"), 1, 2, 3, 4, null, "comment1");
+        addReview(doctorRecordId, LocalDateTime.parse("2019-08-25T10:00:01"), 5, 4, 3, 2, null, "comment2");
+        addReview(doctorRecordId, LocalDateTime.parse("2019-08-26T10:01:01"), null, 1, 1, 1, null, "comment3");
+        addReview(doctorRecordId, LocalDateTime.parse("2019-08-27T11:00:00"), 3, 3, 3, 3, null, null);
+        addReview(doctorRecordId, LocalDateTime.parse("2019-08-28T12:30:00"), null, null, 5, 1, null, "comment5");
+
+        assertEquals(5, reviewRepository.findAll().size());
+
+        this.mockMvc.perform(get("/doctors/reviews?size=2")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].doctorRecordId").value(doctorRecordId))
+                .andExpect(jsonPath("$.content[0].reviewDate").value("2019-08-24T10:00:00"))
+                .andExpect(jsonPath("$.content[0].serviceRating").value(1))
+                .andExpect(jsonPath("$.content[0].equipmentRating").value(2))
+                .andExpect(jsonPath("$.content[0].qualificationRating").value(3))
+                .andExpect(jsonPath("$.content[0].treatmentRating").value(4))
+                .andExpect(jsonPath("$.content[0].totalRating").isEmpty())
+                .andExpect(jsonPath("$.content[0].reviewComment").value("comment1"))
+                .andExpect(jsonPath("$.content[1].doctorRecordId").value(doctorRecordId))
+                .andExpect(jsonPath("$.content[1].reviewDate").value("2019-08-25T10:00:01"))
+                .andExpect(jsonPath("$.content[1].serviceRating").value(5))
+                .andExpect(jsonPath("$.content[1].equipmentRating").value(4))
+                .andExpect(jsonPath("$.content[1].qualificationRating").value(3))
+                .andExpect(jsonPath("$.content[1].treatmentRating").value(2))
+                .andExpect(jsonPath("$.content[1].totalRating").isEmpty())
+                .andExpect(jsonPath("$.content[1].reviewComment").value("comment2"))
+        ;
+
+        this.mockMvc.perform(get("/doctors/reviews?size=2&page=1")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].doctorRecordId").value(doctorRecordId))
+                .andExpect(jsonPath("$.content[0].reviewDate").value("2019-08-26T10:01:01"))
+                .andExpect(jsonPath("$.content[0].serviceRating").isEmpty())
+                .andExpect(jsonPath("$.content[0].equipmentRating").value(1))
+                .andExpect(jsonPath("$.content[0].qualificationRating").value(1))
+                .andExpect(jsonPath("$.content[0].treatmentRating").value(1))
+                .andExpect(jsonPath("$.content[0].totalRating").isEmpty())
+                .andExpect(jsonPath("$.content[0].reviewComment").value("comment3"))
+                .andExpect(jsonPath("$.content[1].doctorRecordId").value(doctorRecordId))
+                .andExpect(jsonPath("$.content[1].reviewDate").value("2019-08-27T11:00:00"))
+                .andExpect(jsonPath("$.content[1].serviceRating").value(3))
+                .andExpect(jsonPath("$.content[1].equipmentRating").value(3))
+                .andExpect(jsonPath("$.content[1].qualificationRating").value(3))
+                .andExpect(jsonPath("$.content[1].treatmentRating").value(3))
+                .andExpect(jsonPath("$.content[1].totalRating").isEmpty())
+                .andExpect(jsonPath("$.content[1].reviewComment").isEmpty())
+        ;
+
+        this.mockMvc.perform(get("/doctors/reviews?size=2&page=2")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].doctorRecordId").value(doctorRecordId))
+                .andExpect(jsonPath("$.content[0].reviewDate").value("2019-08-28T12:30:00"))
+                .andExpect(jsonPath("$.content[0].serviceRating").isEmpty())
+                .andExpect(jsonPath("$.content[0].equipmentRating").isEmpty())
+                .andExpect(jsonPath("$.content[0].qualificationRating").value(5))
+                .andExpect(jsonPath("$.content[0].treatmentRating").value(1))
+                .andExpect(jsonPath("$.content[0].totalRating").isEmpty())
+                .andExpect(jsonPath("$.content[0].reviewComment").value("comment5"))
+        ;
+    }
 }

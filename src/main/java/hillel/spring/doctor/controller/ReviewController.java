@@ -9,15 +9,15 @@ import hillel.spring.doctor.exception.ResourceNotFoundException;
 import hillel.spring.doctor.service.ReviewService;
 import lombok.AllArgsConstructor;
 import org.hibernate.StaleObjectStateException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @AllArgsConstructor
@@ -27,10 +27,9 @@ public class ReviewController {
     private final ReviewDtoConverter reviewDtoConverter;
 
     @GetMapping("/doctors/reviews")
-    public List<ReviewOutputDto> listReviews() {
-        return reviewService.listReviews().stream()
-                .map(reviewDtoConverter::toOutputDto)
-                .collect(Collectors.toList());
+    public Page<ReviewOutputDto> listReviews(Pageable pageable) {
+        return reviewService.listReviews(pageable)
+                .map(reviewDtoConverter::toOutputDto);
     }
 
     @PostMapping("/doctors/reviews")

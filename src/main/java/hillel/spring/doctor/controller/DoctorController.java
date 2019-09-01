@@ -11,6 +11,8 @@ import hillel.spring.doctor.exception.NoSuchDoctorException;
 import hillel.spring.doctor.exception.UnknownSpecializationException;
 import hillel.spring.doctor.service.DoctorService;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @AllArgsConstructor
@@ -37,10 +38,11 @@ public class DoctorController {
     }
 
     @GetMapping("/doctors")
-    public List<DoctorOutputDto> findDoctors(
+    public Page<DoctorOutputDto> findDoctors(
             @RequestParam Optional<String> specialization,
             @RequestParam Optional<String> name,
-            @RequestParam Optional<List<String>> specializations) {
+            @RequestParam Optional<List<String>> specializations,
+            Pageable pageable) {
 
         Map<String, Object> parameters = new HashMap<>();
         if (specialization.isPresent()) {
@@ -53,13 +55,8 @@ public class DoctorController {
             parameters.put("specializations", specializations.get());
         }
 
-        return toDtoList(doctorService.findByCriteria(parameters));
-    }
-
-    private List<DoctorOutputDto> toDtoList(List<Doctor> doctors) {
-        return doctors.stream()
-                .map(doctor -> doctorDtoConverter.toDto(doctor))
-                .collect(Collectors.toList());
+        return doctorService.findByCriteria(parameters, pageable)
+                .map(doctor -> doctorDtoConverter.toDto(doctor));
     }
 
     @PostMapping("/doctors")
