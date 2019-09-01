@@ -8,13 +8,13 @@ import hillel.spring.doctor.dto.DoctorInputDto;
 import hillel.spring.doctor.dto.DoctorOutputDto;
 import hillel.spring.doctor.exception.BadRequestException;
 import hillel.spring.doctor.exception.NoSuchDoctorException;
-import hillel.spring.doctor.exception.UnknownSpecializationException;
 import hillel.spring.doctor.service.DoctorService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -60,14 +60,14 @@ public class DoctorController {
     }
 
     @PostMapping("/doctors")
-    public ResponseEntity<?> create(@RequestBody DoctorInputDto doctorDto) throws URISyntaxException {
+    public ResponseEntity<?> create(@RequestBody @Validated DoctorInputDto doctorDto) throws URISyntaxException {
         Doctor doctor = doctorService.create(doctorDtoConverter.toModel(doctorDto));
 
         return ResponseEntity.created(new URI("/doctors/" + doctor.getId())).build();
     }
 
     @PutMapping("/doctors/{id}")
-    public ResponseEntity<?> update(@RequestBody DoctorInputDto doctorDto,
+    public ResponseEntity<?> update(@RequestBody @Validated DoctorInputDto doctorDto,
                                     @PathVariable("id") Integer id) {
 
         assertNotNull(id, "Path variable {id} not specified");
@@ -102,12 +102,5 @@ public class DoctorController {
     @GetMapping("/doctors/specializations")
     public List<String> showSpecializations() {
         return doctorSpecializationsConfig.getSpecializations();
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<?> unknownSpecializationHandler(UnknownSpecializationException ex){
-        return ResponseEntity
-                .badRequest()
-                .body(ex.getLocalizedMessage());
     }
 }

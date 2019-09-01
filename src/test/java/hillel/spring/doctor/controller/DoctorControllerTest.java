@@ -15,7 +15,8 @@ import java.util.Set;
 
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -160,14 +161,9 @@ public class DoctorControllerTest {
         this.mockMvc.perform(post("/doctors")
                 .content("{\"name\": \"Hide\"}")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated());
+                .andExpect(status().isBadRequest());
 
-        assertEquals(1, doctorRepository.findAll().size());
-
-        Doctor savedDoctor = doctorRepository.findAll().get(0);
-        assertEquals("Hide", savedDoctor.getName());
-        assertNotNull(savedDoctor.getSpecializations());
-        assertEquals(0, savedDoctor.getSpecializations().size());
+        assertEquals(0, doctorRepository.findAll().size());
     }
 
     @Test
@@ -282,5 +278,56 @@ public class DoctorControllerTest {
                 .andExpect(jsonPath("$.content[0].id").value(id4))
                 .andExpect(jsonPath("$.content[0].name").value("abbey"))
                 .andExpect(jsonPath("$.content[0].specializations[0]").value("surgeon"));
+    }
+
+    @Test
+    public void createDoctorNullOrEmptyName() throws Exception {
+        this.mockMvc.perform(post("/doctors")
+                .content("{\"name\": null, \"specializations\": [\"dentist\"]}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        assertEquals(0, doctorRepository.findAll().size());
+
+        this.mockMvc.perform(post("/doctors")
+                .content("{\"name\": \"\", \"specializations\": [\"dentist\"]}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        assertEquals(0, doctorRepository.findAll().size());
+    }
+
+    @Test
+    public void createDoctorNullOrEmptySpecializationList() throws Exception {
+        this.mockMvc.perform(post("/doctors")
+                .content("{\"name\": \"Hide\", \"specializations\": null}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        assertEquals(0, doctorRepository.findAll().size());
+
+        this.mockMvc.perform(post("/doctors")
+                .content("{\"name\": \"Hide\", \"specializations\": []}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        assertEquals(0, doctorRepository.findAll().size());
+    }
+
+    @Test
+    public void createDoctorNullOrEmptySpecialization() throws Exception {
+        this.mockMvc.perform(post("/doctors")
+                .content("{\"name\": \"Hide\", \"specializations\": [null]}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        assertEquals(0, doctorRepository.findAll().size());
+
+        this.mockMvc.perform(post("/doctors")
+                .content("{\"name\": \"Hide\", \"specializations\": [\"\"]}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        assertEquals(0, doctorRepository.findAll().size());
     }
 }

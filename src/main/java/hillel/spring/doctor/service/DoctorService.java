@@ -3,7 +3,6 @@ package hillel.spring.doctor.service;
 import hillel.spring.doctor.config.DoctorSpecializationsConfig;
 import hillel.spring.doctor.domain.Doctor;
 import hillel.spring.doctor.exception.NoSuchDoctorException;
-import hillel.spring.doctor.exception.UnknownSpecializationException;
 import hillel.spring.doctor.repository.DoctorRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -81,12 +80,10 @@ public class DoctorService {
     }
 
     public Doctor create(Doctor doctor) {
-        assertSpecializationExists(doctor);
         return doctorRepository.save(doctor);
     }
 
     public void update(Doctor doctor) {
-        assertSpecializationExists(doctor);
         doctorRepository.save(doctor);
     }
 
@@ -96,24 +93,5 @@ public class DoctorService {
         } catch (EmptyResultDataAccessException e) {
             throw new NoSuchDoctorException(id);
         }
-    }
-
-    public Optional<String> findSpecialization(String specialization) {
-        return doctorSpecializationsConfig.getSpecializations().stream()
-                .filter(s -> s.equals(specialization.toLowerCase()))
-                .findFirst();
-    }
-
-    private void assertSpecializationExists(Doctor doctor) {
-        if (doctor.getSpecializations() == null) {
-            return;
-        }
-
-        doctor.getSpecializations()
-                .forEach(specialization -> {
-                    if (findSpecialization(specialization).isEmpty()) {
-                        throw new UnknownSpecializationException("Unknown specialization: " + specialization);
-                    }
-                });
     }
 }
