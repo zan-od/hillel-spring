@@ -3,10 +3,11 @@ package hillel.spring.doctor.service;
 import hillel.spring.doctor.config.DoctorSpecializationsConfig;
 import hillel.spring.doctor.domain.Doctor;
 import hillel.spring.doctor.exception.NoSuchDoctorException;
-import hillel.spring.doctor.exception.UnknownSpecializationException;
 import hillel.spring.doctor.repository.DoctorRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -51,7 +52,7 @@ public class DoctorService {
         return doctorRepository.findById(id);
     }
 
-    public List<Doctor> findByCriteria(Map<String, Object> parameters) {
+    public Page<Doctor> findByCriteria(Map<String, Object> parameters, Pageable pageable) {
         Specification<Doctor> compositeCriteria = null;
         for (Map.Entry<String, Object> parameter : parameters.entrySet()) {
             switch (parameter.getKey()) {
@@ -68,9 +69,9 @@ public class DoctorService {
         }
 
         if (compositeCriteria == null) {
-            return doctorRepository.findAll();
+            return doctorRepository.findAll(pageable);
         } else {
-            return doctorRepository.findAll(compositeCriteria);
+            return doctorRepository.findAll(compositeCriteria, pageable);
         }
     }
 
@@ -79,12 +80,10 @@ public class DoctorService {
     }
 
     public Doctor create(Doctor doctor) {
-        assertSpecializationExists(doctor);
         return doctorRepository.save(doctor);
     }
 
     public void update(Doctor doctor) {
-        assertSpecializationExists(doctor);
         doctorRepository.save(doctor);
     }
 
@@ -94,24 +93,5 @@ public class DoctorService {
         } catch (EmptyResultDataAccessException e) {
             throw new NoSuchDoctorException(id);
         }
-    }
-
-    public Optional<String> findSpecialization(String specialization) {
-        return doctorSpecializationsConfig.getSpecializations().stream()
-                .filter(s -> s.equals(specialization.toLowerCase()))
-                .findFirst();
-    }
-
-    private void assertSpecializationExists(Doctor doctor) {
-        if (doctor.getSpecializations() == null) {
-            return;
-        }
-
-        doctor.getSpecializations()
-                .forEach(specialization -> {
-                    if (findSpecialization(specialization).isEmpty()) {
-                        throw new UnknownSpecializationException("Unknown specialization: " + specialization);
-                    }
-                });
     }
 }

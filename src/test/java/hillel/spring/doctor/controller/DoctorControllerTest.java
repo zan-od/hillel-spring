@@ -15,7 +15,8 @@ import java.util.Set;
 
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -78,13 +79,13 @@ public class DoctorControllerTest {
         this.mockMvc.perform(get("/doctors?name={name}", "A")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id").value(id2))
-                .andExpect(jsonPath("$[0].name").value("Abbott"))
-                .andExpect(jsonPath("$[0].specializations[0]").value("surgeon"))
-                .andExpect(jsonPath("$[1].id").value(id3))
-                .andExpect(jsonPath("$[1].name").value("archibald"))
-                .andExpect(jsonPath("$[1].specializations[0]").value("therapist"));
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].id").value(id2))
+                .andExpect(jsonPath("$.content[0].name").value("Abbott"))
+                .andExpect(jsonPath("$.content[0].specializations[0]").value("surgeon"))
+                .andExpect(jsonPath("$.content[1].id").value(id3))
+                .andExpect(jsonPath("$.content[1].name").value("archibald"))
+                .andExpect(jsonPath("$.content[1].specializations[0]").value("therapist"));
     }
 
     @Test
@@ -94,7 +95,7 @@ public class DoctorControllerTest {
         this.mockMvc.perform(get("/doctors?name={name}", "A")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0)));
+                .andExpect(jsonPath("$.content", hasSize(0)));
     }
 
     @Test
@@ -108,13 +109,13 @@ public class DoctorControllerTest {
         this.mockMvc.perform(get("/doctors?specialization={spec}&name={name}", "surgeon", "Abb")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id").value(id2))
-                .andExpect(jsonPath("$[0].name").value("Abbott"))
-                .andExpect(jsonPath("$[0].specializations[0]").value("surgeon"))
-                .andExpect(jsonPath("$[1].id").value(id4))
-                .andExpect(jsonPath("$[1].name").value("Abbey"))
-                .andExpect(jsonPath("$[1].specializations[0]").value("surgeon"));
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].id").value(id2))
+                .andExpect(jsonPath("$.content[0].name").value("Abbott"))
+                .andExpect(jsonPath("$.content[0].specializations[0]").value("surgeon"))
+                .andExpect(jsonPath("$.content[1].id").value(id4))
+                .andExpect(jsonPath("$.content[1].name").value("Abbey"))
+                .andExpect(jsonPath("$.content[1].specializations[0]").value("surgeon"));
     }
 
     @Test
@@ -128,16 +129,16 @@ public class DoctorControllerTest {
         this.mockMvc.perform(get("/doctors?specializations={spec}&name={name}", "surgeon,dentist", "Ab")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(3)))
-                .andExpect(jsonPath("$[0].id").value(id1))
-                .andExpect(jsonPath("$[0].name").value("Abrams"))
-                .andExpect(jsonPath("$[0].specializations", hasSize(2)))
-                .andExpect(jsonPath("$[1].id").value(id2))
-                .andExpect(jsonPath("$[1].name").value("Abbott"))
-                .andExpect(jsonPath("$[1].specializations[0]").value("surgeon"))
-                .andExpect(jsonPath("$[2].id").value(id4))
-                .andExpect(jsonPath("$[2].name").value("abbey"))
-                .andExpect(jsonPath("$[2].specializations[0]").value("surgeon"));
+                .andExpect(jsonPath("$.content", hasSize(3)))
+                .andExpect(jsonPath("$.content[0].id").value(id1))
+                .andExpect(jsonPath("$.content[0].name").value("Abrams"))
+                .andExpect(jsonPath("$.content[0].specializations", hasSize(2)))
+                .andExpect(jsonPath("$.content[1].id").value(id2))
+                .andExpect(jsonPath("$.content[1].name").value("Abbott"))
+                .andExpect(jsonPath("$.content[1].specializations[0]").value("surgeon"))
+                .andExpect(jsonPath("$.content[2].id").value(id4))
+                .andExpect(jsonPath("$.content[2].name").value("abbey"))
+                .andExpect(jsonPath("$.content[2].specializations[0]").value("surgeon"));
     }
 
     @Test
@@ -160,14 +161,9 @@ public class DoctorControllerTest {
         this.mockMvc.perform(post("/doctors")
                 .content("{\"name\": \"Hide\"}")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated());
+                .andExpect(status().isBadRequest());
 
-        assertEquals(1, doctorRepository.findAll().size());
-
-        Doctor savedDoctor = doctorRepository.findAll().get(0);
-        assertEquals("Hide", savedDoctor.getName());
-        assertNotNull(savedDoctor.getSpecializations());
-        assertEquals(0, savedDoctor.getSpecializations().size());
+        assertEquals(0, doctorRepository.findAll().size());
     }
 
     @Test
@@ -249,5 +245,89 @@ public class DoctorControllerTest {
                 .andExpect(status().isNotFound());
 
         assertEquals(1, doctorRepository.findAll().size());
+    }
+
+    @Test
+    public void findDoctorsByNameAndSpecializationsPageable() throws Exception {
+        Integer id1 = addDoctor(1, "Abrams", Set.of("oculist", "dentist"));
+        Integer id2 = addDoctor(2, "Abbott", "surgeon");
+        Integer id3 = addDoctor(3, "archibald", Set.of("therapist", "oculist"));
+        Integer id4 = addDoctor(4, "abbey", "surgeon");
+        Integer id5 = addDoctor(5, "Abbey1");
+
+        this.mockMvc.perform(get("/doctors?specializations={spec}&name={name}&size=1", "surgeon,dentist", "Ab")
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].id").value(id1))
+                .andExpect(jsonPath("$.content[0].name").value("Abrams"))
+                .andExpect(jsonPath("$.content[0].specializations", hasSize(2)));
+
+        this.mockMvc.perform(get("/doctors?specializations={spec}&name={name}&size=1&page=1", "surgeon,dentist", "Ab")
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].id").value(id2))
+                .andExpect(jsonPath("$.content[0].name").value("Abbott"))
+                .andExpect(jsonPath("$.content[0].specializations[0]").value("surgeon"));
+
+        this.mockMvc.perform(get("/doctors?specializations={spec}&name={name}&size=1&page=2", "surgeon,dentist", "Ab")
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].id").value(id4))
+                .andExpect(jsonPath("$.content[0].name").value("abbey"))
+                .andExpect(jsonPath("$.content[0].specializations[0]").value("surgeon"));
+    }
+
+    @Test
+    public void createDoctorNullOrEmptyName() throws Exception {
+        this.mockMvc.perform(post("/doctors")
+                .content("{\"name\": null, \"specializations\": [\"dentist\"]}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        assertEquals(0, doctorRepository.findAll().size());
+
+        this.mockMvc.perform(post("/doctors")
+                .content("{\"name\": \"\", \"specializations\": [\"dentist\"]}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        assertEquals(0, doctorRepository.findAll().size());
+    }
+
+    @Test
+    public void createDoctorNullOrEmptySpecializationList() throws Exception {
+        this.mockMvc.perform(post("/doctors")
+                .content("{\"name\": \"Hide\", \"specializations\": null}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        assertEquals(0, doctorRepository.findAll().size());
+
+        this.mockMvc.perform(post("/doctors")
+                .content("{\"name\": \"Hide\", \"specializations\": []}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        assertEquals(0, doctorRepository.findAll().size());
+    }
+
+    @Test
+    public void createDoctorNullOrEmptySpecialization() throws Exception {
+        this.mockMvc.perform(post("/doctors")
+                .content("{\"name\": \"Hide\", \"specializations\": [null]}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        assertEquals(0, doctorRepository.findAll().size());
+
+        this.mockMvc.perform(post("/doctors")
+                .content("{\"name\": \"Hide\", \"specializations\": [\"\"]}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        assertEquals(0, doctorRepository.findAll().size());
     }
 }
