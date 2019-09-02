@@ -14,9 +14,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -60,14 +60,14 @@ public class DoctorController {
     }
 
     @PostMapping("/doctors")
-    public ResponseEntity<?> create(@RequestBody @Validated DoctorInputDto doctorDto) throws URISyntaxException {
+    public ResponseEntity<?> create(@RequestBody @Valid DoctorInputDto doctorDto) throws URISyntaxException {
         Doctor doctor = doctorService.create(doctorDtoConverter.toModel(doctorDto));
 
         return ResponseEntity.created(new URI("/doctors/" + doctor.getId())).build();
     }
 
     @PutMapping("/doctors/{id}")
-    public ResponseEntity<?> update(@RequestBody @Validated DoctorInputDto doctorDto,
+    public ResponseEntity<?> update(@RequestBody @Valid DoctorInputDto doctorDto,
                                     @PathVariable("id") Integer id) {
 
         assertNotNull(id, "Path variable {id} not specified");
