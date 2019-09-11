@@ -48,7 +48,7 @@ public class DoctorScheduleControllerTest {
     }
 
     private Integer addDoctor(String name) {
-        return doctorRepository.save(new Doctor(null, name, null)).getId();
+        return doctorRepository.save(new Doctor(null, name, null, null)).getId();
     }
 
     private Integer addPet(String name) {

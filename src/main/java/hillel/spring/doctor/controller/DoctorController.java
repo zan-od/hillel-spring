@@ -1,20 +1,26 @@
 package hillel.spring.doctor.controller;
 
+import hillel.spring.doctor.config.DoctorEducationServiceConfig;
 import hillel.spring.doctor.config.DoctorSpecializationsConfig;
 import hillel.spring.doctor.config.DoctorWorkingHoursConfig;
 import hillel.spring.doctor.domain.Doctor;
 import hillel.spring.doctor.dto.DoctorDtoConverter;
+import hillel.spring.doctor.dto.DoctorEducationDto;
 import hillel.spring.doctor.dto.DoctorInputDto;
 import hillel.spring.doctor.dto.DoctorOutputDto;
 import hillel.spring.doctor.exception.BadRequestException;
 import hillel.spring.doctor.exception.NoSuchDoctorException;
+import hillel.spring.doctor.exception.ResourceNotFoundException;
 import hillel.spring.doctor.service.DoctorService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import javax.validation.Valid;
 import java.net.URI;
@@ -26,11 +32,14 @@ import java.util.Optional;
 
 @RestController
 @AllArgsConstructor
+@Slf4j
 public class DoctorController {
     private final DoctorService doctorService;
     private final DoctorDtoConverter doctorDtoConverter;
     private final DoctorWorkingHoursConfig doctorWorkingHoursConfig;
     private final DoctorSpecializationsConfig doctorSpecializationsConfig;
+    private final RestTemplate restTemplate;
+    private final DoctorEducationServiceConfig doctorEducationServiceConfig;
 
     @GetMapping("/doctors/{id}")
     public DoctorOutputDto findById(@PathVariable("id") Integer id) {
@@ -61,7 +70,12 @@ public class DoctorController {
 
     @PostMapping("/doctors")
     public ResponseEntity<?> create(@RequestBody @Valid DoctorInputDto doctorDto) throws URISyntaxException {
-        Doctor doctor = doctorService.create(doctorDtoConverter.toModel(doctorDto));
+        Optional<DoctorEducationDto> doctorEducationOutputDto = findDoctorEducation(doctorDto.getDiplomaNumber());
+        if (doctorEducationOutputDto.isEmpty()) {
+            throw new ResourceNotFoundException(String.format("Information about diploma No %s not found", doctorDto.getDiplomaNumber()));
+        }
+
+        Doctor doctor = doctorService.create(doctorDtoConverter.toModel(doctorDto, doctorEducationOutputDto.get()));
 
         return ResponseEntity.created(new URI("/doctors/" + doctor.getId())).build();
     }
@@ -76,7 +90,12 @@ public class DoctorController {
             throw new NoSuchDoctorException(id);
         }
 
-        Doctor doctor = doctorDtoConverter.toModel(doctorDto, id);
+        Optional<DoctorEducationDto> doctorEducationOutputDto = findDoctorEducation(doctorDto.getDiplomaNumber());
+        if (doctorEducationOutputDto.isEmpty()) {
+            throw new ResourceNotFoundException(String.format("Information about diploma No %s not found", doctorDto.getDiplomaNumber()));
+        }
+
+        Doctor doctor = doctorDtoConverter.toModel(doctorDto, doctorEducationOutputDto.get(), id);
         doctorService.update(doctor);
 
         return ResponseEntity.noContent().build();
@@ -102,5 +121,29 @@ public class DoctorController {
     @GetMapping("/doctors/specializations")
     public List<String> showSpecializations() {
         return doctorSpecializationsConfig.getSpecializations();
+    }
+
+    @GetMapping("/doctors/education")
+    public ResponseEntity<?> getDoctorEducation(@RequestParam String diplomaNumber) {
+        return ResponseEntity.of(findDoctorEducation(diplomaNumber));
+    }
+
+    private Optional<DoctorEducationDto> findDoctorEducation(String diplomaNumber) {
+        log.info("Calling doctor education service");
+        log.debug("Start findDoctorEducation({})", diplomaNumber);
+
+        DoctorEducationDto doctorEducationDto = null;
+        try {
+            doctorEducationDto = restTemplate.getForObject(
+                    doctorEducationServiceConfig.getUrl() + "/education?diplomaNumber=" + diplomaNumber,
+                    DoctorEducationDto.class);
+        } catch (HttpClientErrorException.NotFound e) {
+            log.warn("Doctor education data not found!");
+        }
+
+        log.trace("Service response: {}", doctorEducationDto);
+        log.debug("Finish findDoctorEducation({})", diplomaNumber);
+
+        return Optional.ofNullable(doctorEducationDto);
     }
 }

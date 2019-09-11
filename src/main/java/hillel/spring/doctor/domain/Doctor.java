@@ -20,4 +20,7 @@ public class Doctor {
     private String name;
     @ElementCollection(fetch = FetchType.EAGER)
     private Set<String> specializations;
+
+    @Embedded
+    DoctorEducation education;
 }

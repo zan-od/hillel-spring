@@ -2,6 +2,7 @@ package hillel.spring.doctor.controller;
 
 import hillel.spring.TestRunner;
 import hillel.spring.doctor.domain.Doctor;
+import hillel.spring.doctor.domain.DoctorEducation;
 import hillel.spring.doctor.repository.DoctorRepository;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,15 +39,12 @@ public class DoctorControllerTest {
     }
 
     private Integer addDoctor(Integer id, String name, Set<String> specializations) {
-        return doctorRepository.save(new Doctor(id, name, specializations)).getId();
+        DoctorEducation education = new DoctorEducation("1", "2", "dentist", 2000);
+        return doctorRepository.save(new Doctor(id, name, specializations, education)).getId();
     }
 
     private Integer addDoctor(Integer id, String name, String specialization) {
-        return doctorRepository.save(new Doctor(id, name, Set.of(specialization))).getId();
-    }
-
-    private Integer addDoctor(Integer id, String name) {
-        return doctorRepository.save(new Doctor(id, name, null)).getId();
+        return addDoctor(id, name, Set.of(specialization));
     }
 
     @Test
@@ -104,7 +102,7 @@ public class DoctorControllerTest {
         Integer id2 = addDoctor(2, "Abbott", "surgeon");
         Integer id3 = addDoctor(3, "archibald", "therapist");
         Integer id4 = addDoctor(4, "Abbey", "surgeon");
-        Integer id5 = addDoctor(5, "Abbey1");
+        Integer id5 = addDoctor(5, "Abbey1", "");
 
         this.mockMvc.perform(get("/doctors?specialization={spec}&name={name}", "surgeon", "Abb")
                 .accept(MediaType.APPLICATION_JSON))
@@ -124,7 +122,7 @@ public class DoctorControllerTest {
         Integer id2 = addDoctor(2, "Abbott", "surgeon");
         Integer id3 = addDoctor(3, "archibald", Set.of("therapist", "oculist"));
         Integer id4 = addDoctor(4, "abbey", "surgeon");
-        Integer id5 = addDoctor(5, "Abbey1");
+        Integer id5 = addDoctor(5, "Abbey1", "");
 
         this.mockMvc.perform(get("/doctors?specializations={spec}&name={name}", "surgeon,dentist", "Ab")
                 .accept(MediaType.APPLICATION_JSON))
@@ -253,7 +251,7 @@ public class DoctorControllerTest {
         Integer id2 = addDoctor(2, "Abbott", "surgeon");
         Integer id3 = addDoctor(3, "archibald", Set.of("therapist", "oculist"));
         Integer id4 = addDoctor(4, "abbey", "surgeon");
-        Integer id5 = addDoctor(5, "Abbey1");
+        Integer id5 = addDoctor(5, "Abbey1", "");
 
         this.mockMvc.perform(get("/doctors?specializations={spec}&name={name}&size=1", "surgeon,dentist", "Ab")
                 .accept(MediaType.APPLICATION_JSON))
