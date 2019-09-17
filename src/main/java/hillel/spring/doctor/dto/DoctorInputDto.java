@@ -11,5 +11,7 @@ public class DoctorInputDto {
     @NotEmpty
     private String name;
     @NotEmpty
+    private String diplomaNumber;
+    @NotEmpty
     private Set<@NotEmpty @ValidSpecialization String> specializations;
 }
